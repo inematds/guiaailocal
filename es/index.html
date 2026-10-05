@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Guía de ingeniería de IA local</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&amp;family=Spline+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --paper:#F4F3EE;
+  --paper-2:#ECEAE2;
+  --card:#FFFFFF;
+  --ink:#141413;
+  --ink-soft:#3b3a36;
+  --muted:#6c695f;
+  --taupe:#8a877c;
+  --coral:#C15F3C;
+  --coral-deep:#A24A2C;
+  --coral-tint:#F3DDD2;
+  --charcoal:#1A1917;
+  --line:rgba(20,20,19,.12);
+  --shadow:0 1px 2px rgba(20,20,19,.04),0 12px 32px -12px rgba(20,20,19,.16);
+  --shadow-lift:0 2px 4px rgba(20,20,19,.06),0 28px 56px -20px rgba(20,20,19,.28);
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Spline Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --serif:'Fraunces',Georgia,serif;
+  --maxw:1240px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:17px;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+/* blueprint texture + grain */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:46px 46px;opacity:.32;
+  mask-image:radial-gradient(ellipse 120% 90% at 50% 0%,#000 0%,transparent 75%);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.4;
+  background-image:url(../"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(../%23n)' opacity='.035'/%3E%3C/svg%3E");
+}
+a{color:inherit}
+::selection{background:var(--coral);color:#fff}
+
+/* progress bar */
+#progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:200;
+  background:linear-gradient(90deg,var(--coral),var(--coral-deep));box-shadow:0 0 12px rgba(193,95,60,.5)}
+
+/* layout shell */
+.shell{position:relative;z-index:1;max-width:var(--maxw);margin:0 auto;padding:0 28px;
+  display:grid;grid-template-columns:248px 1fr;gap:56px;align-items:start}
+
+/* TOC */
+nav.toc{position:sticky;top:0;height:100vh;padding:48px 0 32px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:2px}
+nav.toc .brand{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--coral);margin-bottom:22px;font-weight:700}
+nav.toc a{display:flex;gap:11px;align-items:baseline;padding:7px 12px;border-radius:8px;
+  text-decoration:none;color:var(--muted);font-size:13.5px;line-height:1.3;transition:.22s;border:1px solid transparent}
+nav.toc a .num{font-family:var(--mono);font-size:10.5px;color:var(--taupe);flex:none;width:20px}
+nav.toc a:hover{color:var(--ink);background:rgba(255,255,255,.5)}
+nav.toc a.active{color:var(--ink);background:var(--card);border-color:var(--line);box-shadow:var(--shadow)}
+nav.toc a.active .num{color:var(--coral)}
+
+main{padding-bottom:80px;min-width:0}
+
+/* HERO */
+header.hero{padding:84px 0 60px;position:relative}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--coral);font-weight:700;display:inline-flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:26px;height:1.5px;background:var(--coral);display:inline-block}
+h1.title{font-family:var(--serif);font-weight:900;font-size:clamp(44px,7vw,86px);line-height:.96;
+  letter-spacing:-.02em;margin:22px 0 8px;font-optical-sizing:auto}
+h1.title em{font-style:italic;color:var(--coral)}
+.dek{font-family:var(--serif);font-weight:400;font-size:clamp(19px,2.3vw,25px);font-style:italic;
+  color:var(--ink-soft);max-width:46ch;line-height:1.4;margin-top:14px}
+.thesis{margin:38px 0 30px;padding:26px 30px;background:var(--charcoal);color:#f3f1ea;border-radius:14px;
+  position:relative;box-shadow:var(--shadow-lift);max-width:760px}
+.thesis .q{font-family:var(--serif);font-size:clamp(20px,2.6vw,27px);font-weight:500;line-height:1.34;letter-spacing:-.01em}
+.thesis .q span{color:var(--coral)}
+.thesis .by{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--taupe);margin-top:14px}
+.meta-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px}
+.meta-chip{font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:var(--ink-soft);
+  background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 15px;box-shadow:var(--shadow)}
+.meta-chip b{color:var(--coral)}
+
+/* sections */
+section{padding:54px 0;border-top:1px solid var(--line);scroll-margin-top:30px}
+.sec-head{display:flex;align-items:flex-start;gap:18px;margin-bottom:26px}
+.sec-num{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--coral);
+  border:1.5px solid var(--coral);border-radius:8px;padding:5px 9px;flex:none;margin-top:6px;background:var(--coral-tint)}
+.sec-head h2{font-family:var(--serif);font-weight:700;font-size:clamp(27px,4vw,42px);line-height:1.05;letter-spacing:-.018em}
+.sec-head .sub{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.prose p{margin:0 0 16px;max-width:72ch}
+.prose strong{font-weight:600;color:var(--ink)}
+.lead{font-size:19px;color:var(--ink-soft)}
+
+/* cards / grids */
+.grid{display:grid;gap:18px;margin:22px 0}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px;box-shadow:var(--shadow);transition:.3s}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift);border-color:rgba(193,95,60,.4)}
+.card h3{font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:-.01em;margin-bottom:7px;display:flex;gap:10px;align-items:baseline}
+.card h3 .tag{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--coral);padding:3px 7px;border-radius:5px;font-weight:700}
+.card p{font-size:14.5px;color:var(--ink-soft);margin:0}
+
+/* stat cards */
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px 22px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stat::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--coral)}
+.stat .big{font-family:var(--serif);font-weight:900;font-size:clamp(30px,4vw,44px);line-height:1;color:var(--coral);letter-spacing:-.02em}
+.stat .lab{font-size:13.5px;color:var(--ink-soft);margin-top:9px;line-height:1.4}
+
+/* quote/take blocks */
+.take{background:linear-gradient(180deg,#fff,#fbfaf6);border:1px solid var(--line);border-left:4px solid var(--coral);
+  border-radius:0 14px 14px 0;padding:20px 24px;margin:22px 0;box-shadow:var(--shadow)}
+.take p{font-family:var(--serif);font-style:italic;font-size:18.5px;line-height:1.45;color:var(--ink);margin:0;max-width:none}
+.take .src{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:10px;font-style:normal}
+.plain{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--green,#5b8266);border-radius:0 13px 13px 0;padding:15px 20px;margin:20px 0;box-shadow:var(--shadow);max-width:72ch}
+.plain b{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:#5b8266;display:block;margin-bottom:6px}
+.plain p{font-size:15.5px;color:var(--ink-soft);margin:0;line-height:1.5;max-width:none}
+.start60{background:linear-gradient(180deg,#fff,#fbf7f3);border:1px solid var(--line);border-top:4px solid var(--coral);border-radius:4px 4px 16px 16px;padding:26px 28px;margin:30px 0 8px;box-shadow:var(--shadow-lift);max-width:820px}
+.start60 h2{font-family:var(--serif);font-weight:700;font-size:clamp(22px,3vw,30px);letter-spacing:-.015em;margin-bottom:12px}
+.start60 p{font-size:16px;color:var(--ink-soft);margin:0 0 12px;max-width:72ch;line-height:1.55}
+.start60 ol{margin:6px 0 14px;padding-left:0;list-style:none;counter-reset:s60;display:flex;flex-direction:column;gap:9px}
+.start60 ol li{position:relative;padding-left:40px;font-size:15.5px;color:var(--ink-soft);line-height:1.5}
+.start60 ol li::before{counter-increment:s60;content:counter(s60);position:absolute;left:0;top:0;width:26px;height:26px;background:var(--coral);color:#fff;font-family:var(--mono);font-size:13px;font-weight:700;border-radius:7px;display:flex;align-items:center;justify-content:center}
+.start60 ol li b{color:var(--ink);font-weight:600}
+.start60 .s60-foot{font-size:14px;color:var(--muted);margin:0}
+
+/* code */
+.code{background:var(--charcoal);color:#e9e6dd;border-radius:12px;padding:18px 20px;margin:18px 0;
+  font-family:var(--mono);font-size:13px;line-height:1.7;overflow-x:auto;box-shadow:var(--shadow-lift);border:1px solid #2a2823}
+.code .c{color:#8f8a7d}
+.code .k{color:#E0916F}
+.code .v{color:#cfe0c8}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;margin:22px 0;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);background:var(--paper-2);font-weight:700}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#faf9f4}
+td b{color:var(--coral);font-weight:600;font-family:var(--mono);font-size:13.5px}
+.mono-cell{font-family:var(--mono);font-size:12.5px}
+
+/* lists */
+ul.clean{list-style:none;margin:18px 0;display:flex;flex-direction:column;gap:13px}
+ul.clean li{position:relative;padding-left:30px;font-size:15.5px;color:var(--ink-soft);max-width:74ch}
+ul.clean li::before{content:"";position:absolute;left:6px;top:11px;width:8px;height:8px;background:var(--coral);
+  border-radius:2px;transform:rotate(45deg)}
+ul.clean li b{color:var(--ink);font-weight:600}
+
+/* tag pills */
+.promptbox{background:var(--card);border:1px solid var(--line);border-radius:13px;margin:16px 0;box-shadow:var(--shadow);overflow:hidden}
+.promptbox .ph{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--coral-tint);padding:9px 16px;border-bottom:1px solid var(--line)}
+.promptbox .ph b{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--coral-deep)}
+.promptbox .ph em{font-family:var(--mono);font-size:10px;font-style:normal;color:var(--coral-deep);opacity:.75}
+.promptbox .pc{padding:15px 18px;font-family:var(--mono);font-size:12.5px;line-height:1.65;color:var(--ink);white-space:pre-wrap;overflow-x:auto}
+.promptbox .pc i{color:var(--coral-deep);font-style:normal;font-weight:700}
+.copybtn{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#fff;background:var(--coral);border:none;border-radius:6px;padding:5px 11px;cursor:pointer;transition:.18s;flex:none}
+.copybtn:hover{background:var(--coral-deep)}
+.copybtn.done{background:#5b8266}
+.code{position:relative}
+.code .copybtn{position:absolute;top:10px;right:10px}
+.dlbtn{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12.5px;letter-spacing:.02em;text-decoration:none;color:#fff;background:#5b8266;border:1px solid #4d6f57;padding:11px 18px;border-radius:999px;box-shadow:0 2px 12px -3px rgba(91,130,102,.6);cursor:pointer;transition:.2s}
+.dlbtn:hover{background:#4d6f57;transform:translateY(-1px)}
+.justme{background:linear-gradient(180deg,#fff,#f4f8f4);border:1px solid var(--line);border-top:4px solid var(--green,#5b8266);border-radius:4px 4px 16px 16px;padding:24px 26px;margin:30px 0 6px;box-shadow:var(--shadow-lift)}
+.justme .tagline{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#5b8266;font-weight:700}
+.justme h2{font-family:var(--serif);font-weight:700;font-size:clamp(24px,3.4vw,34px);letter-spacing:-.015em;margin:8px 0 8px}
+.justme p{font-size:16px;color:var(--ink-soft);margin:0 0 12px;max-width:70ch;line-height:1.55}
+.watch{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.watch a{font-family:var(--mono);font-size:12px;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 14px;box-shadow:var(--shadow);transition:.2s}
+.watch a:hover{border-color:var(--coral);color:var(--coral)}
+.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px;margin:22px 0}
+.gterm{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;box-shadow:var(--shadow);transition:.22s}
+.gterm:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift);border-color:rgba(193,95,60,.4)}
+.gterm dt{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--coral);margin-bottom:5px}
+.gterm dd{font-size:14px;color:var(--ink-soft);line-height:1.5;margin:0}
+.pills{display:flex;flex-wrap:wrap;gap:9px;margin:18px 0}
+.pill{font-family:var(--mono);font-size:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:999px;padding:6px 13px;color:var(--ink-soft);box-shadow:var(--shadow);transition:.2s}
+.pill:hover{border-color:var(--coral);color:var(--coral);transform:translateY(-2px)}
+.pill b{color:var(--coral)}
+
+/* stack diagram */
+.stack{display:flex;flex-direction:column;gap:7px;margin:24px 0;font-family:var(--mono)}
+.layer{display:grid;grid-template-columns:120px 1fr;gap:18px;align-items:center;
+  background:var(--card);border:1px solid var(--line);border-radius:11px;padding:15px 18px;box-shadow:var(--shadow);transition:.25s}
+.layer:hover{transform:translateX(6px);border-color:rgba(193,95,60,.45)}
+.layer .ll{font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--coral);font-weight:700}
+.layer .ld{font-family:var(--sans);font-size:14px;color:var(--ink-soft)}
+
+/* dark band */
+.band{position:relative;z-index:1;background:var(--charcoal);color:#ece9e0;margin:0;padding:0}
+.band .shell{grid-template-columns:1fr;gap:0}
+.band-inner{max-width:var(--maxw);margin:0 auto;padding:70px 28px}
+.band .kicker{color:#E0916F}
+.band .kicker::before{background:#E0916F}
+.band h2{font-family:var(--serif);font-weight:700;font-size:clamp(28px,4.5vw,48px);letter-spacing:-.02em;line-height:1.04;margin:16px 0 8px;max-width:18ch}
+.band h2 em{font-style:italic;color:#E0916F}
+.band p{color:#bdb9ac;max-width:64ch;font-size:17px}
+.band .grid{margin-top:34px}
+.band .stat{background:#222019;border-color:#322f28}
+.band .stat .big{color:#E0916F}
+.band .stat .lab{color:#bdb9ac}
+
+/* playbook steps */
+.steps{counter-reset:step;display:flex;flex-direction:column;gap:14px;margin:24px 0}
+.step{display:grid;grid-template-columns:54px 1fr;gap:18px;align-items:start;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);transition:.25s}
+.step:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift)}
+.step::before{counter-increment:step;content:counter(step,decimal-leading-zero);
+  font-family:var(--mono);font-weight:700;font-size:18px;color:#fff;background:var(--coral);
+  border-radius:10px;width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.step .st{font-size:15.5px;color:var(--ink-soft)}
+.step .st b{color:var(--ink);font-weight:600}
+
+/* footer */
+footer{position:relative;z-index:1;background:var(--paper-2);border-top:1px solid var(--line);margin-top:0}
+.foot-inner{max-width:var(--maxw);margin:0 auto;padding:56px 28px}
+.foot-inner .big-line{font-family:var(--serif);font-weight:700;font-size:clamp(24px,3.6vw,38px);letter-spacing:-.02em;line-height:1.12;max-width:24ch;margin-bottom:24px}
+.foot-inner .big-line span{color:var(--coral)}
+.foot-meta{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.8;letter-spacing:.02em}
+
+/* reveal animation */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+.hero .reveal{transition-delay:var(--d,0s)}
+
+/* mobile nav */
+.menu-btn{display:none;position:fixed;top:14px;right:14px;z-index:210;background:var(--charcoal);color:#fff;
+  border:none;font-family:var(--mono);font-size:11px;letter-spacing:.1em;padding:11px 14px;border-radius:10px;box-shadow:var(--shadow-lift);cursor:pointer}
+
+@media(max-width:980px){
+  .shell{grid-template-columns:1fr;gap:0}
+  nav.toc{position:fixed;inset:0 0 0 auto;width:300px;height:100vh;background:var(--paper);z-index:205;
+    transform:translateX(105%);transition:.35s;box-shadow:var(--shadow-lift);padding:64px 20px 24px;border-left:1px solid var(--line)}
+  nav.toc.open{transform:none}
+  .menu-btn{display:block}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  main{padding-top:8px}
+  header.hero{padding:64px 0 40px}
+}
+@media(max-width:560px){
+  body{font-size:16px}
+  .shell{padding:0 18px}
+  .layer{grid-template-columns:1fr;gap:5px}
+  .step{grid-template-columns:1fr;gap:10px}
+  .sec-head{gap:12px}
+}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}html{scroll-behavior:auto}.panel.active{animation:none}*{transition-duration:.001ms!important;animation-duration:.001ms!important}}
+a:focus-visible,button:focus-visible,[role="slider"]:focus-visible,.tablink:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:6px}
+.skip{position:absolute;left:-9999px;top:8px;z-index:300;background:var(--charcoal);color:#fff;font-family:var(--mono);font-size:13px;letter-spacing:.05em;padding:11px 18px;border-radius:9px;text-decoration:none;box-shadow:var(--shadow-lift)}
+.skip:focus{left:12px}
+
+/* ===== TOP BAR / TABS ===== */
+.topbar{position:sticky;top:0;z-index:150;background:rgba(244,243,238,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topbar-inner{max-width:var(--maxw);margin:0 auto;padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.archlink{font-family:var(--mono);font-size:12px;letter-spacing:.03em;text-decoration:none;color:#fff;background:var(--coral);border:1px solid var(--coral);padding:8px 15px;border-radius:999px;box-shadow:0 2px 10px -2px rgba(193,95,60,.6);white-space:nowrap;flex:none;transition:.2s}
+.archlink:hover{background:var(--coral-deep);transform:translateY(-1px)}
+.topbar .wm{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);font-weight:700;white-space:nowrap}
+.topbar .wm b{color:var(--coral)}
+.tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:var(--shadow)}
+.tab-btn{font-family:var(--mono);font-size:12px;letter-spacing:.03em;border:none;background:transparent;color:var(--muted);padding:8px 17px;border-radius:999px;cursor:pointer;transition:.22s;white-space:nowrap}
+.tab-btn:hover{color:var(--ink)}
+.tab-btn.active{background:var(--coral);color:#fff;box-shadow:0 2px 10px -2px rgba(193,95,60,.6)}
+.panel{display:none}
+.panel.active{display:block;animation:fadepanel .5s cubic-bezier(.2,.7,.2,1)}
+@keyframes fadepanel{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+nav.toc{top:58px;height:calc(100vh - 58px);padding-top:30px}
+section{scroll-margin-top:82px}
+
+/* ===== WALKTHROUGH ===== */
+.wt-hero{padding:64px 0 26px}
+.wt-hero .lead{font-family:var(--serif);font-size:clamp(20px,2.6vw,28px);font-style:italic;color:var(--ink-soft);max-width:44ch;line-height:1.4;margin-top:14px}
+.chapter{padding:48px 0;border-top:1px solid var(--line);scroll-margin-top:82px;position:relative}
+.ch-head{display:flex;align-items:baseline;gap:16px;margin-bottom:6px}
+.ch-num{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--coral);flex:none}
+.ch-head h2{font-family:var(--serif);font-weight:700;font-size:clamp(26px,3.7vw,40px);line-height:1.04;letter-spacing:-.018em}
+.ch-tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--coral);background:var(--coral-tint);border-radius:6px;padding:4px 10px;margin:6px 0 18px;font-weight:700}
+.wt-body{max-width:70ch}
+.wt-body p{margin:0 0 17px;font-size:17px;color:var(--ink-soft)}
+.wt-body p strong{color:var(--ink);font-weight:600}
+.wt-body p.drop::first-letter{font-family:var(--serif);font-weight:900;font-size:3.3em;line-height:.78;float:left;margin:7px 13px 0 0;color:var(--coral)}
+.wt-body .mono-cell{font-family:var(--mono);font-size:14px;background:var(--paper-2);padding:1px 6px;border-radius:5px}
+.pullquote{margin:28px 0;padding:6px 0 6px 26px;border-left:3px solid var(--coral);font-family:var(--serif);font-style:italic;font-size:clamp(20px,2.6vw,26px);line-height:1.34;color:var(--ink)}
+.pullquote .src{display:block;font-family:var(--mono);font-style:normal;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:12px}
+
+/* ===== NUGGETS ===== */
+.nug-hero{padding:64px 0 22px}
+.nug-cat{padding:36px 0 6px;scroll-margin-top:82px;border-top:none}
+.nug-cat-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.nug-cat-head .dot{width:9px;height:9px;background:var(--coral);border-radius:2px;transform:rotate(45deg);flex:none}
+.nug-cat-head h2{font-family:var(--mono);font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);font-weight:700}
+.nug-cat-head .count{font-family:var(--mono);font-size:11px;color:var(--taupe);margin-left:auto}
+.nug-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.nug{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:18px 19px;box-shadow:var(--shadow);transition:.25s;position:relative;overflow:hidden}
+.nug::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--coral);transform:scaleY(0);transform-origin:top;transition:.3s}
+.nug:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift)}
+.nug:hover::before{transform:scaleY(1)}
+.nug p{font-size:15px;line-height:1.5;color:var(--ink-soft);margin:0}
+.nug p b{color:var(--ink);font-weight:600}
+.nug-quote{grid-column:1/-1;background:var(--charcoal);color:#f3f1ea;border-radius:14px;padding:30px 34px;box-shadow:var(--shadow-lift)}
+.nug-quote p{font-family:var(--serif);font-style:italic;font-size:clamp(20px,2.8vw,30px);line-height:1.3;color:#f3f1ea;max-width:34ch;margin:0}
+.nug-quote p span{color:#E0916F}
+
+/* ===== AUDIO PLAYER ===== */
+.player{margin:36px 0 4px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);max-width:780px;display:flex;align-items:center;gap:18px}
+.player .pbtn{flex:none;width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;background:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px -6px rgba(193,95,60,.7);transition:.2s}
+.player .pbtn:hover{transform:scale(1.06);background:var(--coral-deep)}
+.player .pbtn svg{width:22px;height:22px;display:block}
+.player .pmid{flex:1;min-width:0}
+.player .ptop{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:9px}
+.player .plabel{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--coral);font-weight:700}
+.player .ptime{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.player .track{height:7px;background:var(--paper-2);border-radius:99px;position:relative;cursor:pointer}
+.player .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,var(--coral),var(--coral-deep));border-radius:99px}
+.player .fill::after{content:"";position:absolute;right:-5px;top:50%;transform:translateY(-50%);width:13px;height:13px;border-radius:50%;background:#fff;border:2px solid var(--coral);box-shadow:var(--shadow)}
+.player .prate{flex:none;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;cursor:pointer;transition:.2s;min-width:52px;text-align:center}
+.player .prate:hover{border-color:var(--coral);color:var(--coral)}
+@media(max-width:560px){.player{flex-wrap:wrap;gap:13px}.player .pmid{order:3;flex:1 0 100%}}
+
+/* ===== ENGINES ===== */
+.fam-chip{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;padding:3px 8px;border-radius:5px;color:#fff;flex:none}
+.fam-portable{background:#5b8266}
+.fam-apple{background:#6b7a8f}
+.fam-cuda{background:var(--coral)}
+.fam-prod{background:#1A1917}
+.fam-orch{background:#9a6a3c}
+.eng{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow);transition:.3s}
+.eng:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift);border-color:rgba(193,95,60,.4)}
+.eng .eh{display:flex;align-items:center;gap:10px;margin-bottom:11px;flex-wrap:wrap}
+.eng .eh h3{font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:-.01em}
+.eng p{font-size:14.5px;color:var(--ink-soft);margin:0 0 11px}
+.eng .verdict{font-size:13.5px;color:var(--ink);background:var(--coral-tint);border-radius:9px;padding:11px 13px;margin-top:4px;line-height:1.5}
+.eng .verdict b{color:var(--coral-deep);font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:3px}
+.warn{background:#2a1a14;color:#f3e0d6;border:1px solid #4a2c20;border-radius:13px;padding:17px 22px;margin:22px 0;font-size:15px;box-shadow:var(--shadow);line-height:1.5}
+.warn b{color:#E0916F}
+.tablink{cursor:pointer}
+.bridge{font-size:16px;color:var(--ink-soft);max-width:64ch;margin-top:16px;line-height:1.55}
+.orient{margin:20px 0 2px;font-size:14.5px;color:var(--ink-soft);max-width:780px;line-height:1.62}
+.orient .tablink{color:var(--coral);font-weight:600}
+/* ===== CALCULATOR ===== */
+.calcwrap{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:64px 28px 80px}
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:30px}
+.calc-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:var(--shadow)}
+.calc-card h3{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--coral);font-weight:700;margin-bottom:16px}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:5px}
+.field .hint{font-weight:400;color:var(--muted);font-size:12px}
+.field input[type=number],.field select{width:100%;font-family:var(--mono);font-size:14px;color:var(--ink);background:var(--paper-2);border:1px solid var(--line);border-radius:9px;padding:10px 12px;transition:.15s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--coral);background:#fff}
+.field.row{display:flex;gap:10px;align-items:center}
+.field.row label{margin:0}
+.field.check{display:flex;align-items:center;gap:9px}
+.field.check input{width:18px;height:18px;accent-color:var(--coral)}
+.field.check label{margin:0;font-weight:600}
+.verdict{border-radius:13px;padding:16px 20px;margin-bottom:16px;font-family:var(--serif);font-size:20px;font-weight:600;line-height:1.25;border:1px solid var(--line)}
+.verdict.good{background:#eef4ee;border-color:#cfe0cf;color:#33623f}
+.verdict.tight{background:#fbf1e4;border-color:#ecd8bd;color:#8a5a1f}
+.verdict.no{background:#fbe9e3;border-color:#eccabb;color:#a23a1f}
+.verdict .vsub{display:block;font-family:var(--sans);font-size:13.5px;font-weight:400;margin-top:5px;opacity:.85}
+.calc-out .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0}
+.calc-out .stat{padding:16px 16px}
+.calc-out .stat .big{font-size:clamp(22px,3vw,30px)}
+.calc-out .stat .lab{font-size:12.5px}
+.calc-note{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:14px}
+.barwrap{margin-top:14px}
+.barwrap .blab{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:5px}
+.bar{height:14px;background:var(--paper-2);border-radius:99px;overflow:hidden;border:1px solid var(--line);position:relative}
+.bar .used{height:100%;background:linear-gradient(90deg,var(--coral),var(--coral-deep));width:0;transition:width .3s}
+.bar .used.over{background:linear-gradient(90deg,#c0442a,#8a2f1c)}
+@media(max-width:760px){.calc{grid-template-columns:1fr}.calc-out .grid{grid-template-columns:1fr 1fr}}
+
+@media(max-width:980px){
+  .topbar-inner{padding:8px 16px;height:auto;flex-wrap:wrap}
+  .topbar .wm{display:none}
+  .tabs{flex:1;justify-content:space-between}
+  .tab-btn{flex:1;padding:9px 4px;font-size:11px;letter-spacing:0}
+  .archlink{font-size:11px;padding:8px 12px}
+  .menu-btn{top:auto;bottom:18px;right:18px}
+}
+</style>
+<meta content="notranslate-disabled" name="google"/><style>
+#google_translate_element{position:fixed;left:12px;bottom:12px;z-index:9999;opacity:.12;transition:.2s}#google_translate_element:hover{opacity:1}.goog-te-banner-frame.skiptranslate{display:none!important}body{top:0!important}.goog-logo-link,.goog-te-gadget span{display:none!important}.goog-te-gadget{font-size:0!important}.goog-te-combo{font-size:12px!important;border:1px solid rgba(20,20,19,.18);border-radius:8px;padding:6px;background:#fff}
+</style><link href="https://inematds.github.io/guiaailocal/" hreflang="pt-BR" rel="alternate"/><link href="https://inematds.github.io/guiaailocal/en/" hreflang="en" rel="alternate"/><link href="https://inematds.github.io/guiaailocal/es/" hreflang="es" rel="alternate"/></head>
+<body><div class="inema-lang" style="position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;gap:2px;padding:4px;border-radius:10px;background:rgba(12,12,16,.82);border:1px solid rgba(226,162,59,.45);font:600 12px/1 Sora,Inter,system-ui,sans-serif;backdrop-filter:blur(8px)" translate="no"><a href="../" hreflang="pt-BR" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">PT</a><a href="../en/" hreflang="en" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#e9e9ee">EN</a><a href="./" hreflang="es" style="padding:6px 8px;border-radius:7px;text-decoration:none;color:#1a1206;background:#E2A23B">ES</a></div>
+<a class="skip" href="#main">Saltar al contenido</a>
+<div id="progress"></div>
+<button class="menu-btn" id="menuBtn">CONTENIDO</button>
+<div class="topbar">
+<div class="topbar-inner">
+<div class="wm">LOCAL <b>IA</b> // guía de ingeniería</div>
+<div aria-label="Vistas de la guía" class="tabs" role="tablist">
+<button aria-controls="tab-guide" aria-selected="true" class="tab-btn active" data-tab="guide" id="tab-guide-btn" role="tab" title="La referencia completa, 15 secciones">La Guía</button>
+<button aria-controls="tab-calc" aria-selected="false" class="tab-btn" data-tab="calc" id="tab-calc-btn" role="tab" title="¿Puedo ejecutar este modelo? Calculadora interactiva">Calculadora</button>
+<button aria-controls="tab-walkthrough" aria-selected="false" class="tab-btn" data-tab="walkthrough" id="tab-walkthrough-btn" role="tab" title="El proceso completo de construcción, en detalle">Guía rápida</button>
+<button aria-controls="tab-engines" aria-selected="false" class="tab-btn" data-tab="engines" id="tab-engines-btn" role="tab" title="Motores de inferencia: guía para decidir">Motores</button>
+</div>
+<a class="archlink" href="../architectures.html" title="Planos de arquitectura con diagramas del sistema">Arquitecturas ↗</a>
+</div>
+</div>
+<div aria-labelledby="tab-guide-btn" class="panel active" id="tab-guide" role="tabpanel" tabindex="0">
+<a id="main"></a>
+<div class="shell">
+<nav class="toc" id="toc">
+<div class="brand">// IA local</div>
+<a href="#s0"><span class="num">00</span> La pila en una vista general</a>
+<a href="#s1"><span class="num">01</span> Por qué usar IA local</a>
+<a href="#s2"><span class="num">02</span> Hardware</a>
+<a href="#s3"><span class="num">03</span> Inferencia y puesta a disposición</a>
+<a href="#s4"><span class="num">04</span> Panorama de los modelos</a>
+<a href="#sev"><span class="num">★</span> Evalúate</a>
+<a href="#s5"><span class="num">05</span> Compresión</a>
+<a href="#s6"><span class="num">06</span> Ingeniería de contexto</a>
+<a href="#s7"><span class="num">07</span> Optimización del rendimiento</a>
+<a href="#s8"><span class="num">08</span> Agentes de programación</a>
+<a href="#s9"><span class="num">09</span> Enjambres y orquestación</a>
+<a href="#s10"><span class="num">10</span> Seguridad y confianza cero</a>
+<a href="#s11"><span class="num">11</span> Auto-mejora</a>
+<a href="#s12"><span class="num">12</span> Casos de uso relacionados</a>
+<a href="#s13"><span class="num">13</span> Producción a escala</a>
+<a href="#s14"><span class="num">14</span> La economía</a>
+<a href="#s15"><span class="num">15</span> Plan para empezar</a>
+<a href="#sgd"><span class="num">★</span> Profundiza: desde cero</a>
+<a href="#s16"><span class="num">16</span> Glosario en lenguaje sencillo</a>
+<a href="#s17"><span class="num">17</span> Preguntas frecuentes</a>
+</nav>
+<main>
+<header class="hero">
+<div class="kicker reveal" style="--d:0s">Un manual práctico para ejecutar IA en tu propio hardware</div>
+<h1 class="title reveal" style="--d:.06s">La Guía de IA Local<br/><em>Ingeniería</em> Guía</h1>
+<p class="dek reveal" style="--d:.12s">Ejecuta IA de nivel avanzado en un hardware que te pertenece.</p>
+<div class="meta-row reveal" style="--d:.24s">
+<span class="meta-chip"><b>2026</b> edición</span>
+<span class="meta-chip">Prioridad local</span>
+<span class="meta-chip">4 vistas</span>
+<span class="meta-chip">15 secciones</span>
+</div>
+<p class="orient reveal" style="--d:.36s">Cuatro maneras de lograrlo: <span class="tablink" data-tab="guide" role="button" tabindex="0">la Guía</span> es la referencia completa, <span class="tablink" data-tab="walkthrough" role="button" tabindex="0">el Recorrido</span> cuenta la historia de la compilación de principio a fin, <span class="tablink" data-tab="engines" role="button" tabindex="0">Motores</span> es cómo elegir un motor de inferencia.</p>
+<p class="orient reveal" style="--d:.42s">Nuevo y el más claro de todos: una página complementaria de <a href="../architectures.html" style="color:var(--coral);font-weight:600">planos de arquitectura</a>, con un diagrama del sistema y una explicación en lenguaje cotidiano para cada configuración, desde una sola laptop hasta un clúster doméstico.</p>
+</header>
+<div class="start60 reveal">
+<h2>Empieza aquí en 60 segundos</h2>
+<p>La IA de gran escala suele funcionar en la nube de otra persona. Eso cuesta dinero, puede cambiar o dejar de funcionar sin previo aviso y significa que tus datos salen de tus manos. Esta guía trata sobre cómo ejecutarla en tu propia computadora: más barato, privado y tuyo. La contrapartida es que tú lo configuras y te encargas de mantenerlo.</p>
+<p><b>La idea completa en tres pasos:</b></p>
+<ol>
+<li><b>Ejecuta un modelo en tu propia máquina</b> con un programa gratuito (llama.cpp), en la computadora que ya tienes.</li>
+<li><b>Apúntale tu herramienta de IA</b> cambiando una configuración para que use tu modelo en lugar de la nube.</li>
+<li><b>Añade más solo cuando sea necesario:</b> velocidad, más usuarios, trucos para bases de código grandes o seguridad, una cosa a la vez.</li>
+</ol>
+<p class="s60-foot">Todo lo que sigue detalla esos tres pasos. ¿Eres nuevo? Consulta la guía o el <a href="../architectures.html" style="color:var(--coral);font-weight:600">planos de arquitectura</a> primero.</p>
+</div>
+<!-- 0 -->
+<section id="s0">
+<div class="sec-head reveal"><div class="sec-num">00</div><div><h2>Toda la pila en una vista general</h2><div class="sub">De arriba abajo: del propósito al silicio</div></div></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>Este es el mapa de todas las piezas y cómo se organizan. No necesitas todas las capas. La mayoría de las personas usa solo las de abajo (una máquina, un motor, un modelo) y agrega las superiores cuando se topa con un límite.</p></div>
+<div class="prose reveal">
+<p class="lead">La ingeniería de IA local va más allá de instalar una app de chat. Hay una pila completa debajo, y esta guía la cubre de principio a fin.</p>
+</div>
+<div class="stack reveal">
+<div class="layer"><span class="ll">Por qué</span><span class="ld">Soberanía, privacidad, costo fijo, sin límites de solicitudes, resiliencia ante la retirada repentina de un proveedor</span></div>
+<div class="layer"><span class="ll">Agentes</span><span class="ld">Claude Code / opencode / Droid / Kimi-CLI apuntados a un endpoint local</span></div>
+<div class="layer"><span class="ll">Arnés</span><span class="ld">Enrutamiento (DSPy / GEPA), compiladores de contexto (RLM), memoria (MemAgent / Honcho)</span></div>
+<div class="layer"><span class="ll">Servicio</span><span class="ld">vLLM / llama.cpp / SGLang / ktransformers, con AIBrix en Kubernetes</span></div>
+<div class="layer"><span class="ll">Modelos</span><span class="ld">Pesos abiertos: Qwen, GLM, DeepSeek, Kimi, MiniMax, Gemma, Nemotron</span></div>
+<div class="layer"><span class="ll">Comprimir</span><span class="ld">Cuantización (GGUF / AWQ / FP8 / NVFP4 / BitNet) + compresión de caché KV (TurboQuant)</span></div>
+<div class="layer"><span class="ll">Hardware</span><span class="ld">GB10 / Ryzen AI 395 / 4x A6000 / Apple Silicon / cajas de borde con 7 años</span></div>
+<div class="layer"><span class="ll">Seguridad</span><span class="ld">Ejecución en sandbox (Hyperlight / Firecracker), controles de instalación de confianza cero (Aegis)</span></div>
+</div> </section>
+<!-- 1 -->
+<section id="s1">
+<div class="sec-head reveal"><div class="sec-num">01</div><div><h2>Por qué usar IA local</h2><div class="sub">Los argumentos, con pruebas</div></div></div>
+<div class="prose reveal">
+<p>El argumento no es «lo local es más inteligente que Claude». Es «ciertos razonamientos nunca deberían llegar a la API de otra persona», además de las ventajas económicas concretas. <strong>El subsidio es una trampa:</strong> la programación barata en la nube estaba subsidiada por capital de riesgo y la factura está por llegar.</p>
+</div>
+<div class="grid g4 reveal">
+<div class="stat"><div class="big">$133k</div><div class="lab">Por mes, extrapolado a partir de un agente que gastó $14.06 en menos de 5 minutos ($3/min)</div></div>
+<div class="stat"><div class="big">40x</div><div class="lab">Impacto del reajuste de precios de Copilot. «Tu plan de $19 por puesto se convirtió en un problema de $1,550. 40 veces más, no un 40% más».</div></div>
+<div class="stat"><div class="big">$15k</div><div class="lab">El mayor gasto mensual en agentes en la nube por ingeniero registrado en startups</div></div>
+<div class="stat"><div class="big">$0</div><div class="lab">Costo marginal local por token después de la inversión inicial. Sin facturas inesperadas ni telemetría.</div></div>
+</div>
+<ul class="clean reveal">
+<li><b>La nube no es determinista y su rendimiento se degrada sin avisar.</b> Un experimento de $43 descubrió que la calidad de salida es "una onda sinusoidal de genialidad y galimatías" vinculada a la carga y la hora del día: cuantización agresiva hasta 2-bit, GPU spin-down, system prompts intercambiados. Lo local es "determinísticamente tonto", pero predecible y tuyo.</li>
+<li><b>El riesgo del proveedor es real y puede aparecer de repente.</b> Caídas del servicio, cambios en la retención de datos de 5 años, límites de uso semanales, suspensiones por controles de exportación de modelos enteros. «La caída del servicio es temporal. Los pesos son para siempre».</li>
+<li><b>El contrapunto honesto.</b> Lo local tiene que ver con la resiliencia y la privacidad, no con superar a los modelos de frontera en capacidad bruta. Ejecuta localmente lo que puedas y envía fuera solo los problemas realmente difíciles, valiosos y que se puedan comprimir. La opción híbrida también es la única solución real para la IA en la sombra.</li>
+</ul>
+</section>
+<!-- 2 -->
+<section id="s2">
+<div class="sec-head reveal"><div class="sec-num">02</div><div><h2>Hardware</h2><div class="sub">Los equipos usados en la práctica</div></div></div>
+<div class="prose reveal"><p>Un conjunto representativo de equipos va desde un «cajón de calcetines» hasta un «calefactor», todos son equipos reales bajo carga.</p></div>
+<div class="tbl-wrap reveal">
+<table>
+<thead><tr><th>Equipo</th><th>Silicio</th><th>Memoria</th><th>Rol</th></tr></thead>
+<tbody>
+<tr><td><b>NVIDIA GB10 / ZGX Nano</b></td><td>Grace-Blackwell, CUDA cap 12.1</td><td class="mono-cell">128GB unificada</td><td>Equipo compacto para agentes de uso diario. Del tamaño de la palma de la mano, de 33 a 74W, ejecuta DeepSeek V4 con contexto de 1M.</td></tr>
+<tr><td><b>HP Z8 Fury G5</b></td><td>Xeon + 4x RTX A6000 48GB</td><td class="mono-cell">~192GB VRAM / 477GB RAM</td><td>La «bestia». Récords de rendimiento, entrenamiento y MoE gigantescos. ~1.8kW, A6000s a entre 84 y 90C.</td></tr>
+<tr><td><b>HP Z2 Mini G1a</b></td><td>AMD Ryzen AI MAX+ PRO 395</td><td class="mono-cell">128GB unificada</td><td>El lado de AMD / ROCm. «Exocortex» de bolsillo.</td></tr>
+<tr><td><b>MacBook Air / Pro</b></td><td>Apple Silicon M3 / M4 / M5</td><td class="mono-cell">24 a 32GB</td><td>Cliente SSH ligero; modelos pequeños en Metal / MLX; inferencia WebGPU en el navegador.</td></tr>
+<tr><td><b>ThinkPad X280 de 2018</b></td><td>i5-8350U, solo CPU</td><td class="mono-cell">16GB</td><td>Prueba extrema en el borde: Qwen3-8B a ~3.27 tok/s, ~16W con batería.</td></tr>
+<tr><td><b>clúster k8s "Z14 Mecha"</b></td><td>1x Z8 + 3x Z2 (NVIDIA + AMD)</td><td class="mono-cell">564GiB VRAM</td><td>Kubernetes con proveedores mixtos, "un centro de datos en un clóset".</td></tr>
+</tbody>
+</table>
+</div>
+<ul class="clean reveal">
+<li><b>El hardware antiguo y la buena ingeniería ganan.</b> "No es el auto, es quien lo conduce." Las A6000 de hace 5 años superan en rendimiento a las API SaaS.</li>
+<li><b>Fuerza más VRAM en Ryzen AI 395.</b> Tiene una capacidad nominal de 96GB, pero un modo de BIOS «edge AI server» y ajustes de Linux GTT / TTM liberan el conjunto completo de 128GB: Qwen3-Coder-30B BF16 con un contexto de 1M, 115GB de uso de memoria y 24.4 tok/s.</li>
+<li><b>Vigila las temperaturas en Strix Halo.</b> Se apagó por temperatura porque thermald no reconocía el nuevo CPUID; la solución fue <span class="mono-cell">thermald --ignore-cpuid-check</span>.</li>
+<li><b>La red es el cómputo.</b> Una A6000 se puede compartir por LAN con una ThinkPad mediante un controlador de GPU virtual, tunelizando CUDA por QUIC / TLS / UDP. DGX Spark es un juguete para aprender, no para producción.</li>
+</ul>
+</section>
+<!-- 3 -->
+<section id="s3">
+<div class="sec-head reveal"><div class="sec-num">03</div><div><h2>Inferencia y puesta a disposición</h2><div class="sub">Dos motores hacen el 90% del trabajo</div></div></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>Un motor de inferencia es el programa que ejecuta el modelo: carga los pesos, recibe tu solicitud y transmite la respuesta. El modelo es el bloque del motor; esto es todo el auto que lo rodea. vLLM es el de servicio pesado, diseñado para muchos usuarios a la vez. llama.cpp es el todoterreno que funciona en casi cualquier equipo.</p></div>
+<div class="grid g3 reveal">
+<div class="card"><h3>vLLM</h3><p>El motor de serving para producción. Rutas compatibles con OpenAI, Anthropic y Ollama, batching continuo, prefill por bloques y caché de prefijos. Compilado desde el código fuente para modelos disponibles desde el primer día.</p></div>
+<div class="card"><h3>llama.cpp</h3><p>El motor más fácil de usar y para el edge. GGUF, llama-server, funciona con CUDA / Metal / ROCm / Vulkan. Código fuente editado directamente para trabajar con KV y cuantización.</p></div>
+<div class="card"><h3>SGLang</h3><p>Decodificación especulativa EAGLE, parsers de herramientas y razonamiento de GLM. Una ruta de servicio para modelos específicos.</p></div>
+<div class="card"><h3>ktransformers</h3><p>Descarga híbrida a VRAM + RAM para modelos enormes. Así ejecutó Kimi K2, con 1T de parámetros, de forma local.</p></div>
+<div class="card"><h3>AIBrix</h3><p>plano de control nativo de k8s: escalado automático con conocimiento de LLM, enrutamiento distribuido de caché KV, LoRA de alta densidad. Una «plataforma de IA empresarial» capaz.</p></div>
+<div class="card"><h3 style="display:flex"><span class="tag">shim</span> fake-ollama</h3><p>Un proxy de Rust / axum que hace que Copilot, Cline y Roo crean que hablan con Ollama mientras el tráfico llega a vLLM / llama.cpp.</p></div>
+</div>
+<div class="prose reveal"><p><strong>El patrón plug-and-play que se repite constantemente:</strong> apunta cualquier agente de programación basado en la nube a un endpoint local.</p></div>
+<div class="code reveal">
+<span class="c"># Redirige cualquier agente compatible con Anthropic a pesos locales</span><br/>
+<span class="k">exportar</span> ANTHROPIC_BASE_URL=<span class="v">http://localhost:8080</span> <span class="c"># llama.cpp</span><br/>
+<span class="k">exportar</span> ANTHROPIC_BASE_URL=<span class="v">http://localhost:8000</span> <span class="c"># vLLM</span><br/>
+<span class="c"># Claude Code ahora "simplemente funciona" con tu propio modelo</span>
+</div>
+<div class="prose reveal"><p>Cuando un agente solo habla un dialecto, ponle una capa de compatibilidad. <strong>Claude Code Router (ccr)</strong> traduce Claude Code a backends compatibles con OpenAI; fake-ollama cubre el dialecto de Ollama. Las configuraciones serias evitan Ollama y prefieren vLLM y llama.cpp para tener más control.</p></div> <div class="prose reveal"><p>La división que lo determina todo es entre prefill y decode. <strong>Prefill</strong> lee el prompt y está limitado por la capacidad de cómputo. <strong>Decodificación</strong> genera un token a la vez y está limitado por el ancho de banda de memoria. Un prompt corto con una respuesta larga depende del ancho de banda y del procesamiento por lotes; un prompt largo con una respuesta corta depende de los kernels de atención y del prellenado por fragmentos. Adapta el motor a esa forma, a tu interconexión y a tu formato de cuantización.</p></div>
+<div class="tbl-wrap reveal">
+<table>
+<thead><tr><th>Tu situación</th><th>Usa</th></tr></thead>
+<tbody>
+<tr><td>Laptop, edge o hardware poco común</td><td><b>llama.cpp</b></td></tr>
+<tr><td>Flujos centrados en Mac</td><td><b>MLX / MLX-LM</b></td></tr>
+<tr><td>Inferencia local en una sola RTX</td><td><b>ExLlamaV2</b></td></tr>
+<tr><td>De 2 a 4 o más GPUs NVIDIA/CUDA</td><td><b>ExLlamaV3</b></td></tr>
+<tr><td>Inferencia general en producción</td><td><b>vLLM</b></td></tr>
+<tr><td>Contexto largo / MoE / enrutamiento</td><td><b>SGLang</b></td></tr>
+<tr><td>Máximo rendimiento en NVIDIA</td><td><b>TensorRT-LLM</b></td></tr>
+<tr><td>Orquestación de clúster</td><td><b>NVIDIA Dynamo</b></td></tr>
+</tbody>
+</table>
+</div>
+<div class="prose reveal"><p>Esa es la versión de una página. La <span class="tablink" data-tab="engines" role="button" style="color:var(--coral);font-weight:600" tabindex="0">Pestaña Engines</span> incluye el desglose completo motor por motor, los cuellos de botella reales, recetas de estrategia de hardware y cómo medirlos con honestidad.</p></div>
+</section>
+<!-- 4 -->
+<section id="s4">
+<div class="sec-head reveal"><div class="sec-num">04</div><div><h2>El panorama de los modelos de pesos abiertos</h2><div class="sub">Y cómo elegir</div></div></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>Estos son los cerebros reales que puedes descargar y ejecutar, en su mayoría gratis y abiertos. Los nombres cambian cada pocas semanas, pero la regla no: elige el más pequeño que haga bien tu trabajo, no el más grande que encuentres.</p></div> <div class="grid g3 reveal">
+<div class="card"><h3>Qwen3.x / 3.6</h3><p>La familia estrella, de 0.6B a 480B-A35B. Qwen3-Coder-Next (~80B / 3B activos) es el asistente de programación diario predeterminado. "Qwen es el nuevo Llama."</p></div>
+<div class="card"><h3>GLM-4.x / 5</h3><p>Z.ai, MIT. «Opus en casa». GLM-4.7-Flash es la opción «rápida, buena y barata»; superó a los demás en llamadas a herramientas por una fracción del costo de Opus.</p></div>
+<div class="card"><h3>DeepSeek V3.x / V4</h3><p>"Alma de desarrollador sénior de una empresa del Fortune 500" para backends. V4-Flash: 284B / 13B activos, contexto de 1M, Sparse Attention ~9x más barato.</p></div>
+<div class="card"><h3>Kimi K2.x</h3><p>Moonshot, 1T / 32B activos. Nativo para enjambres de agentes, hasta 300 subagentes en paralelo.</p></div>
+<div class="card"><h3>MiniMax M2.x</h3><p>~230B / 10B activos. «Anthropic en una botella», reducido con NVFP4 para que quepa en un solo GB10.</p></div>
+<div class="card"><h3>Gemma 4 / Nemotron</h3><p>Híbridos de Mamba-Transformer de Google con licencia Apache-2.0 y NVIDIA. Además: Ling / Ring, ERNIE, Hunyuan, LongCat.</p></div>
+</div>
+<ul class="clean reveal">
+<li><b>La eficiencia es la nueva escalabilidad. Más grande no significa mejor.</b> Un modelo denso de 27B o un MoE con 3B activos en la frontera de Pareto supera a un gigante de 1T para la mayoría de los trabajos.</li>
+<li><b>Adapta el modelo al idioma y al trabajo.</b> DeepSeek para backends empresariales, no para JavaScript de startups. Modelos pequeños y diminutos para tareas de agentes repetitivas y específicas.</li>
+<li><b>Los benchmarks públicos rara vez predicen si algo se adapta a tus necesidades.</b> La eficiencia en tokens, el costo y la facilidad de uso en tus propias tareas son mejores criterios de selección.</li>
+<li><b>La dispersión de MoE es la clave.</b> Una enorme cantidad total de parámetros y muy pocos parámetros activos por token es lo que permite que un comportamiento de vanguardia quepa en la memoria de un equipo de consumo.</li>
+</ul>
+</section>
+<section id="sev">
+<div class="sec-head reveal"><div class="sec-num">★</div><div><h2>Evalúalo tú mismo: evaluaciones</h2><div class="sub">La tabla de clasificación no es tu trabajo</div></div></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>Que un modelo esté en lo más alto de una tabla de clasificación pública casi no te dice nada sobre si es bueno para tu trabajo. La solución es una evaluación: un conjunto pequeño de tareas reales tuyas por el que haces pasar cada modelo candidato, y luego te quedas con el que gana en esas tareas, no en el gráfico.</p></div> <div class="wt-body reveal">
+<p>Cómo hacer una evaluación rápida sin framework: reúne entre 10 y 30 tareas que realmente haces (un error real que corregir, una función que escribir, un documento que resumir), cada una con la respuesta que aceptarías. Ejecuta todos los modelos candidatos con todas ellas. Califícalos como aprobados o reprobados, o simplemente compara las salidas A/B para decidir cuál implementarías. Conserva el ganador en tu conjunto de tareas. Ese resultado vale más que cualquier benchmark, porque se mide con el trabajo que te importa.</p>
+<p>Funciona en ambos sentidos, y ese es precisamente el punto. A veces, los modelos abiertos ya superan a los modelos insignia cerrados en evaluaciones del mundo real (un modelo abierto superó hace poco a un modelo cerrado de primer nivel en una evaluación de un framework web en producción), y a veces no superan los tuyos. Solo lo averiguas probándolos con tus propias tareas. Para calificar a gran escala, puedes usar un modelo potente como evaluador, pero normalmente basta con revisar 20 ejemplos para decidir.</p>
+</div>
+</section>
+<!-- 5 -->
+<section id="s5">
+<div class="sec-head reveal"><div class="sec-num">05</div><div><h2>Compresión</h2><div class="sub">Cuantización y caché KV</div></div></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>Los modelos y la memoria que necesitan son enormes, así que los haces más pequeños. La cuantización almacena los números con menos precisión, como guardar una foto en un JPEG más pequeño: es un poco menos exacto, pero ocupa menos espacio y aún se ve bien. La caché KV es la memoria a corto plazo que el modelo tiene de la conversación actual; comprimirla es lo que permite que un contexto enorme quepa en una tarjeta gráfica pequeña.</p></div>
+<div class="prose reveal"><p>Aquí es donde la ingeniería local se vuelve difícil y se consiguen la mayoría de las mejoras. <strong>Formatos de pesos:</strong> GGUF (Q2_K a Q8_0), AWQ de 4 bits, FP8, NVFP4 / MXFP4 y ternario BitNet de 1.58 bits.</p></div>
+<div class="grid g3 reveal">
+<div class="card"><h3>APEX</h3><p>Precisión mixta consciente de MoE en llama.cpp estándar. Los bits por experto y por capa superan a Q8_0 e incluso a F16 en perplejidad, con la mitad del tamaño.</p></div>
+<div class="card"><h3>Destilación de BitNet</h3><p>Convierte LLM FP a ternario de 1.58 bits: ~10x menos memoria, inferencia en CPU 2.65x más rápida y precisión cercana a FP16.</p></div>
+<div class="card"><h3>Personalizado de 2 bits</h3><p>Un GGUF personalizado de DeepSeek-V4 (IQ2XXS-w2Q2K) es lo que hace que un modelo de 284B quepa físicamente.</p></div>
+</div> <div class="prose reveal"><p><strong>TurboQuant</strong> (el método de Google, implementado en la ruta Triton de vLLM) comprime la caché KV a entre 2.5 y 3.5 bits por token mediante el manejo de valores atípicos, una transformación MSE de Hadamard, codebooks de agrupamiento de Lloyd y una proyección de signo de 1 bit con QJL. Esto fue lo que mantuvo <strong>4.7M tokens of KV cache resident</strong> para alcanzar 3,426 tok/s.</p></div>
+<div class="code reveal">
+<span class="c"># vLLM con compresión de caché KV mediante TurboQuant</span><br/>
+vllm serve /models/target <span class="k">\</span><br/>
+  --tensor-parallel-size <span class="v">4</span> --attention-backend <span class="v">TRITON_ATTN</span> <span class="k">\</span><br/>
+  --kv-cache-dtype <span class="v">turboquant35</span> --enable-turboquant <span class="k">\</span><br/>
+  --turboquant-metadata-path <span class="v">/models/target/turboquant_kv.json</span>
+</div>
+</section>
+<!-- 6 -->
+<section id="s6">
+<div class="sec-head reveal"><div class="sec-num">06</div><div><h2>Ingeniería de contexto</h2><div class="sub">La habilidad más importante</div></div></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>El contexto es todo lo que el modelo puede ver a la vez. Como un escritorio, deja de funcionar cuando lo llenas demasiado. El truco es dejar de volcar toda la base de código en el escritorio y permitir que el modelo busque solo las pocas páginas que necesita, justo cuando las necesita.</p></div> <div class="grid g2 reveal">
+<div class="card"><h3>RLM</h3><p>Modelos de lenguaje recursivos. Carga una base de código de 32M tokens en una variable de Python REPL; el modelo raíz escribe código para recorrerla y crea subagentes que devuelven símbolos resumidos, no muros de texto. Entre un 15% y un 40% en tareas de largo plazo, sin degradación del contexto.</p></div>
+<div class="card"><h3>MemAgent</h3><p>El megacontexto es un problema de memoria, no de atención. RL por fragmentos sobre una memoria de tokens fija: QA de 3.5M tokens con menos del 5% de pérdida y escalado lineal, en un modelo base con un contexto de apenas 8K.</p></div>
+<div class="card"><h3>Compresión óptica</h3><p>El «momento JPEG». Renderiza texto como imágenes para un VLM. DeepSeek-OCR: decodificación del 97% con una compresión de 10x. Glyph: 10k palabras convertidas en ~3k tokens visuales.</p></div>
+<div class="card"><h3>Atención dispersa</h3><p>DeepSeek Sparse Attention reduce el prefill de 128K de ~$0.70 a ~$0.10 por Mtok.</p></div>
+</div>
+<div class="grid g2 reveal" style="align-items:center">
+<div class="stat"><div class="big">96.39%</div><div class="lab">Tasa de aciertos de la caché de prefijos durante una sesión local de Claude Code de 6 horas (46.3M tokens de prompt, solo ~1.3M de cómputo real de prefill). Prueba de que el plan «ilimitado» en la nube es una lotería de caché, no una cuestión de física.</div></div>
+<div class="prose"><p>Un <span class="mono-cell">awk</span> comando de una línea contra vLLM <span class="mono-cell">/metrics</span> lo demuestra: <span class="mono-cell">prefix_cache_hits_total / prefix_cache_queries_total</span>. La idea: el costo marginal es casi cero, así que los límites son puro teatro de precios.</p></div>
+</div>
+<div class="plain reveal"><b>Más allá de una sesión: memoria local y recuperación</b><p>La ingeniería de contexto se ocupa de una sola conversación. Para el conocimiento que debería persistir entre sesiones, crea una capa de memoria privada completamente en tu propia máquina: embeddings locales para indexar tus notas y documentos, además de un reordenador local que vuelve a ordenar los resultados más relevantes para que el modelo vea los pocos fragmentos mejores, no solo los que se parecen. El reordenador es la parte que la mayoría se salta, y es lo que hace que la recuperación local sea precisa. Nada sale de tu máquina.</p></div>
+<div class="plain reveal"><b>No es solo texto</b><p>Los modelos locales también procesan voz e imágenes. Los modelos multimodales abiertos (de la clase Gemma) interpretan imágenes y funcionan completamente sin conexión; los modelos de voz en el dispositivo te permiten dictar y transcribir de forma privada, sin la nube. Se aplican las mismas reglas para ser dueño de tu IA: elige un modelo adecuado, ejecútalo localmente y mantén los datos en la máquina.</p></div>
+</section>
+<!-- 7 -->
+<section id="s7">
+<div class="sec-head reveal"><div class="sec-num">07</div><div><h2>Optimización del rendimiento</h2><div class="sub">Cómo hacer que la inferencia sea realmente rápida</div></div></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>El rendimiento es la cantidad de palabras por segundo que obtienes. Lo sorprendente es que el límite suele ser la velocidad con que la máquina mueve datos en la memoria, no la rapidez con que hace cálculos. Así que las mejoras reales vienen de una organización y planificación más inteligentes, no de una tarjeta gráfica más grande.</p></div>
+<ul class="clean reveal">
+<li><b>Pilas de decodificación especulativa.</b> DFlash (generación preliminar con difusión por bloques, aceleración de ~6x) más DDTree (árbol de borradores en una sola pasada, verificación con atención de árbol, sin pérdida). Observa la longitud media de aceptación en los registros.</li>
+<li><b>La ubicación de los expertos de MoE está limitada por HBM</b> (limitado por la velocidad a la que la memoria de la tarjeta mueve datos, no por sus cálculos). Para alcanzar 370 TPS con 4x A6000: fija el hilo del router a la memoria más cercana, reorganiza la caché KV para que los expertos activos queden en los bancos de memoria más rápidos y establece la profundidad de la cola en ~64 para ocultar la latencia.</li>
+<li><b>Separación entre daemon diurno y nocturno.</b> Baja latencia interactiva durante el día, trabajo por lotes asíncrono con contexto largo por la noche, el mismo hardware.</li>
+</ul>
+<div class="tbl-wrap reveal">
+<table>
+<thead><tr><th>Configuración</th><th>Resultado</th></tr></thead>
+<tbody>
+<tr><td>Qwen3.5-35B AWQ, 4x A6000, TurboQuant 3.5</td><td><b>3,426 tok/s</b> con contexto de 1M, caché KV residente de 4.7M tokens</td></tr>
+<tr><td>MiniMax M2 BF16/FP8, 4x A6000, vLLM + AIBrix</td><td><b>620 tok/s</b>, 6,000 sesiones simultáneas con un 100% de éxito, ~1.8kW</td></tr>
+<tr><td>GLM-4.7-Flash en un solo GB10</td><td><b>~1,470 tok/s</b> generación máxima, 195 concurrentes, cero en cola</td></tr>
+<tr><td>Gemma-4 31B AWQ en UNA A6000</td><td><b>129 simultáneas</b> subagentes, 100% de éxito</td></tr>
+<tr><td>DeepSeek V4-Flash, contexto de 1M, un solo GB10</td><td><b>80 a 91 tok/s</b> por agente</td></tr>
+<tr><td>Gemma4 2.3B en una pestaña del navegador (WebGPU, MacBook Air)</td><td><b>80 tok/s</b>, 2GB de RAM por pestaña, completamente sin conexión</td></tr>
+<tr><td>Qwen3-8B en una CPU i5 de 2018</td><td><b>3.27 tok/s</b> a ~16W</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- 8 -->
+<section id="s8">
+<div class="sec-head reveal"><div class="sec-num">08</div><div><h2>Agentes de programación con modelos locales</h2><div class="sub">La mejora en el uso diario</div></div></div>
+<div class="prose reveal"><p>El patrón siempre es el mismo: toma un agente diseñado para la nube y apúntalo a pesos locales.</p></div>
+<div class="pills reveal">
+<span class="pill"><b>Claude Code</b> sin interfaz gráfica, sin cuenta</span>
+<span class="pill">opencode (32 concurrentes)</span>
+<span class="pill">Factory Droid</span>
+<span class="pill">Kimi-CLI</span>
+<span class="pill">Cursor</span>
+<span class="pill">Cline</span>
+<span class="pill">Kilo</span>
+<span class="pill">Roo</span>
+<span class="pill">Mistral Vibe</span>
+<span class="pill">"16 sistemas en una sola máquina con GPU"</span>
+</div>
+<div class="grid g2 reveal" style="align-items:center">
+<div class="stat"><div class="big">Arnés &gt; modelo</div><div class="lab">En la programación con agentes, el arnés y la ingeniería de contexto suelen importar más que el modelo base. Los enjambres locales bien configurados pueden competir con modelos de vanguardia en bases de código heredadas.</div></div>
+<div class="prose"><p>Una vez que el endpoint es tuyo, la interfaz es portátil: cualquier dispositivo que pueda mantener una conexión puede funcionar como cliente, y una laptop puede ejecutar todo el ciclo completamente sin conexión con un modelo local pequeño.</p></div>
+</div>
+</section>
+<!-- 9 -->
+<section id="s9">
+<div class="sec-head reveal"><div class="sec-num">09</div><div><h2>Enjambres y orquestación</h2><div class="sub">A escala, el trabajo pasa a ser coordinar</div></div></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>Un enjambre no es más que muchas copias del agente trabajando al mismo tiempo, que convierten a un trabajador en todo un equipo. La parte difícil ya no es el trabajo en sí, sino repartir las tareas y evitar que los trabajadores se estorben entre sí.</p></div>
+<div class="prose reveal"><p>Con más de 10,000 agentes y una proporción de IA a personas de 35:1, no hay una interfaz de usuario humana; el backlog es el HUD.</p></div>
+<ul class="clean reveal">
+<li><b>Enjambres.</b> Iniciar, ejecutar, informar y terminar. Los enjambres autoorquestados reducen un análisis exhaustivo con OpenClaw de 3.5 horas y 19M tokens a ~10 minutos, con resultados idénticos en un 90%.</li>
+<li><b>Aislamiento.</b> Un git-worktree por agente, o AgentFS (un archivo .db de SQLite que contiene archivos, estado y tool_calls, de modo que <span class="mono-cell">cp agent.db snapshot.db</span> es viajar en el tiempo y puedes consultar el comportamiento del agente con SQL).</li>
+<li><b>El código heredado es un grafo, no un corpus de documentos.</b> Una herramienta como <span class="mono-cell">dede</span> expone un grafo de dependencias de Roslyn como una skill para que los agentes consulten el alcance del impacto en lugar de dividir a ciegas 40 repos en fragmentos RAG.</li>
+<li><b>Bucle sin interfaz gráfica.</b> temporizadores de systemd más <span class="mono-cell">flock</span> además de etiquetas de issues de Radicle como máquina de estados. Primero sin conexión; las personas hacen el merge al final.</li>
+</ul> </section>
+<!-- 10 -->
+<section id="s10">
+<div class="sec-head reveal"><div class="sec-num">10</div><div><h2>Seguridad y confianza cero</h2><div class="sub">El modelo escribe, el sistema restringe y el sandbox contiene</div></div></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>Una vez que un agente puede ejecutar comandos, trátalo como a un nuevo pasante: es útil, pero no le darías todas las llaves el primer día. Esta configuración le permite sugerir acciones mientras un verificador las aprueba y una sala sellada contiene cualquier error.</p></div>
+<div class="grid g2 reveal">
+<div class="card"><h3>Hyperlight</h3><p>CNCF, Rust. MicroVM aisladas por hardware que se inician en ~1ms, con llamadas al entorno invitado en microsegundos y capacidad de guardar y restaurar instantáneas, para que un rm -rf alucinado se revierta en microsegundos.</p></div>
+<div class="card"><h3>Firecracker + AgentFS</h3><p>aislamiento de microVM para agentes, verificado formalmente con Quint.</p></div>
+<div class="card"><h3>Aegis</h3><p>Una barrera de instalación de confianza cero. Planes de ejecución firmados con Ed25519, registros de auditoría encadenados mediante hashes SHA-256, IA arquitectónicamente incapaz de escalar privilegios: nunca obtiene acceso root ni genera argv; se aplica mediante std::process::Command sin shell.</p></div>
+<div class="card"><h3>Higiene de la cadena de suministro</h3><p>Fija cada artefacto a un SHA-256, desactiva los scripts del ciclo de vida de npm, genera un SBOM, firma con cosign y aplica controles con Trivy y semgrep. «¿Tu stack puede resistir pip install?»</p></div>
+</div> </section>
+<!-- 11 -->
+<section id="s11">
+<div class="sec-head reveal"><div class="sec-num">11</div><div><h2>Mejora personal y entrenamiento local</h2><div class="sub">Entrena en la misma máquina</div></div></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>También puedes mejorar un modelo en tu propia máquina, no solo usarlo. El truco más barato es dejar que aprenda de sus propias mejores respuestas. No necesitas un centro de datos para conseguir una mejora real.</p></div>
+<div class="grid g2 reveal">
+<div class="card"><h3>Autodestilación</h3><p>Apple SSD: SFT con resultados propios del modelo sin verificar, sin RL, verificador, docente ni ejecución. Qwen3-30B pasó del 42.4% al 55.3% de pass@1 en LiveCodeBench, un +30% relativo.</p></div>
+<div class="card"><h3>GEPA + DSPy</h3><p>La optimización genética de Pareto para prompts y skills converge en ~50 iteraciones frente a 5,000 pruebas de fuerza bruta y recopila automáticamente las sesiones de alto éxito.</p></div>
+<div class="card"><h3>Modelos recursivos diminutos</h3><p>TRM (7M params, llamadas recursivas a sí mismo) alcanza un 45% en ARC-AGI-1, superando a modelos miles de veces más grandes. RSA mejora Qwen3-4B en +29.9 en AIME sin verificadores.</p></div>
+<div class="card"><h3>Entrenamiento desde cero</h3><p>nanochat de principio a fin en 4x A6000. Bucles de RL con el verificador de préstamos de Rust (prompt, cargo check, recompensa) alcanzaron una tasa de compilación del 71.8% en un entorno aislado sin privilegios de root.</p></div>
+</div>
+<div class="grid g2 reveal">
+<div class="card"><h3>Cierra el ciclo</h3><p>La forma más barata de mejorar por cuenta propia: dale al agente una manera de verificar sus resultados (pruebas, un compilador, un verificador) y luego haz que repita el ciclo. Redacta, verifica y corrige hasta que pase. Así es como los equipos ejecutan enjambres de agentes que mejoran por sí mismos, sin necesidad de entrenarlos.</p></div>
+<div class="card"><h3>Posentrenamiento abierto</h3><p>Las pilas de RL detrás de los grandes modelos abiertos también son abiertas. Una de ellas ajustó posteriormente un modelo de clase frontier en unos dos días. Puedes usar las mismas herramientas para ajustar posteriormente tu propio modelo con tus propios datos.</p></div>
+</div> </section>
+<!-- 12 -->
+<section id="s12">
+<div class="sec-head reveal"><div class="sec-num">12</div><div><h2>Casos de uso relacionados</h2><div class="sub">Que demuestran la idea</div></div></div>
+<ul class="clean reveal">
+<li><b>Ingeniería inversa, completamente local.</b> Ghidra más un agente local a 80 tok/s descompilaron un binario de 6.9MB en 110 segundos (9,426 funciones, más de 250 APIs de Windows, 7 documentos generados automáticamente). «Tres semanas de trabajo de ingenieros de ingeniería inversa se convierten en una mañana de domingo.»</li>
+<li><b>OCR privado.</b> GLM-OCR (0.9B) supera a Gemini y GPT en el análisis de documentos mientras se ejecuta en vLLM.</li>
+<li><b>La privacidad como capacidad.</b> Qwen3.5-35B local desanonimizó textos con una precisión de ~90%. La idea es que tu estilo de escritura es un dato biométrico, así que nunca debería salir de tu máquina. El mismo enfoque usó un modelo local y mitmproxy para aplicar ingeniería inversa a la API de una freidora de aire.</li>
+<li><b>IA de borde en tiempo real / OT.</b> CASA: percepción a 100Hz, decisión a 10Hz, acción en menos de 10ms, con contratos de decisión (TTL, consenso multimodelo, una comprobación de cordura clásica con Z-score y un registro de auditoría SHA-256). «Un agente debería ser un controlador PID, no un estudiante de filosofía que escribe una tesis».</li>
+</ul>
+<div class="plain reveal"><b>El caso de uso decisivo: agentes siempre activos y ambientales</b><p>Esto es algo que solo puedes hacer en local. Como un modelo local es ilimitado y no tiene costo por llamada ni límite de solicitudes, puedes dejar agentes en ejecución las 24 horas. Hay quienes realizan análisis de seguridad continuos en su propio código, vigilan una base de datos para detectar anomalías y rastrean la web cada veinte minutos en busca de oportunidades, todo el día, todos los días. En las API en la nube eso costaría más que el hardware; en local, solo pagas la electricidad. Una flota de trabajadores incansables que nunca duerme: solo es posible cuando el modelo es tuyo.</p></div>
+<div class="plain reveal"><b>Úsalo desde cualquier lugar, de forma privada (el truco de la red mesh)</b><p>Crea una malla privada (Tailscale) entre todas tus máquinas y tu teléfono, y cualquier dispositivo podrá usar desde cualquier lugar del mundo un modelo que se ejecute en tu equipo de casa, con conexión cifrada y sin pasar nunca por la internet pública. Combínala con un agente orquestador (Hermes u OpenClaw) que cargue modelos y distribuya el trabajo entre tus máquinas, como una persona de TI a la que le hablas en lenguaje natural. Así es como un montón de computadoras se convierte en una nube personal de IA que te pertenece.</p></div>
+</section>
+<!-- 13 -->
+<section id="s13">
+<div class="sec-head reveal"><div class="sec-num">13</div><div><h2>Producción a escala</h2><div class="sub">Hiperescala en casa</div></div></div>
+<div class="grid g3 reveal">
+<div class="card"><h3>k8s + AIBrix</h3><p>El plano de control. Autoescalado consciente de los LLM basado en gpu_cache_usage_perc, caché KV distribuida, KubeRay, LoRA de alta densidad.</p></div>
+<div class="card"><h3>Alta disponibilidad para un equipo</h3><p>2x Ubuntu + MicroK8s, etcd on DRBD, Pacemaker VIP, LINSTOR, MetalLB, ArgoCD canary. Failover under 60s, serving Qwen3-Coder-30B at ~90 tok/s.</p></div>
+<div class="card"><h3>Fábrica de programación con IA</h3><p>Definition of Done como criterios de compilación: bloquea las fusiones por debajo del 85% de cobertura; un agente de seguridad rechaza las PR vulnerables. "Trata la IA como un equipo de ingeniería."</p></div>
+</div>
+</section>
+</main>
+</div>
+<!-- 14 dark band -->
+<div class="band" id="s14">
+<div class="band-inner reveal">
+<div class="kicker">14 / La economía</div>
+<h2>El costo está dominado por <em>caché</em>, no la capacidad de cómputo</h2>
+<p>Por eso los planes de tarifa fija tienen límites de uso (las flotas a gran escala saturan la infraestructura de los proveedores) y por eso «ilimitado» es un anclaje psicológico. El costo marginal de un token local es prácticamente cero después de la inversión inicial.</p>
+<div class="grid g3">
+<div class="stat"><div class="big">88.7%</div><div class="lab">De las consultas de un solo turno pueden responderse localmente (estudio de Stanford sobre inteligencia por vatio)</div></div>
+<div class="stat"><div class="big">80.4%</div><div class="lab">Reducción del consumo energético con enrutamiento híbrido local y en la nube; reducción del 73.8% en costos de cómputo</div></div>
+<div class="stat"><div class="big">45%</div><div class="lab">Reduce costos incluso con un enrutador local con solo un 60 % de precisión</div></div>
+</div>
+</div>
+</div>
+<div class="shell">
+<div></div>
+<main style="padding-top:0">
+<!-- 15 -->
+<section id="s15" style="border-top:none">
+<div class="sec-head reveal"><div class="sec-num">15</div><div><h2>La guía inicial</h2><div class="sub">De la IA local en ocho pasos</div></div></div>
+<div class="steps reveal">
+<div class="step"><div class="st"><b>Elige una máquina que ya tengas.</b> Una MacBook Air, una GPU para juegos, incluso un ThinkPad antiguo. "No existe una guía perfecta. Solo tienes que empezar."</div></div>
+<div class="step"><div class="st"><b>Instala llama.cpp,</b> descarga un GGUF (empieza con Qwen3-Coder-30B o GLM-4.7-Flash) y ejecuta llama-server.</div></div>
+<div class="step"><div class="st"><b>Apúntale tu agente actual.</b> Configura ANTHROPIC_BASE_URL en localhost y ejecuta Claude Code, o usa Claude Code Router / fake-ollama para otras herramientas.</div></div>
+<div class="step"><div class="st"><b>Da el salto a vLLM</b> cuando necesitas rendimiento y concurrencia; agrega caché de prefijos y una cuantización de la caché KV.</div></div>
+<div class="step"><div class="st"><b>Añade ingeniería de contexto</b> (RLM para repositorios grandes, un grafo de dependencias como skill) antes de recurrir a un modelo más grande.</div></div>
+<div class="step"><div class="st"><b>Ejecuta el agente en un sandbox</b> (Firecracker / Hyperlight) y restringe las instalaciones (el patrón Aegis) en cuanto pueda escribir en el disco.</div></div>
+<div class="step"><div class="st"><b>Escalar horizontalmente</b> con AIBrix en k8s solo cuando una máquina realmente sea el cuello de botella.</div></div>
+<div class="step"><div class="st"><b>Mantén un enfoque híbrido.</b> Ejecuta el 90% localmente, deriva el problema difícil ocasional a la nube y ten un plan de contingencia para el día en que un proveedor devuelva budget_exceeded.</div></div>
+</div>
+</section>
+<section id="sgd">
+<div class="sec-head reveal"><div class="sec-num">★</div><div><h2>Profundiza: constrúyelo desde los primeros principios</h2><div class="sub">Para cuando quieras entender, no solo usar</div></div></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>El resto de esta guía trata sobre cómo usar bien la IA local. Esta parte es para quienes sienten curiosidad: construir realmente la cosa para que las reglas dejen de parecer magia. El objetivo es construir, ajustar y lanzar un modelo pequeño, no estudiar teoría para siempre.</p></div>
+<div class="wt-body reveal" style="max-width:72ch"><p>Un camino sin rodeos desde "qué es un token" hasta "entrené un mini-GPT", en cinco fases. Sáltate lo que ya sabes y vuelve a ver lo que se te dificulta.</p></div>
+<div class="steps reveal">
+<div class="step"><div class="st"><b>Fase 0, fundamentos.</b> Solo la matemática de matrices y Python suficientes para que no te intimiden. Sin desviarte durante cinco años.</div></div>
+<div class="step"><div class="st"><b>Fase 1, un motor de autograd desde cero.</b> Construye algo pequeño que haga retropropagación para que el entrenamiento deje de ser una caja negra.</div></div>
+<div class="step"><div class="st"><b>Fase 2, un mini-GPT desde cero.</b> Tokenizer, embeddings, atención, un bloque transformer, muestreo. Conéctalo todo manualmente una vez.</div></div>
+<div class="step"><div class="st"><b>Fase 3, ajusta el modelo de verdad.</b> Implementa LoRA y ajusta un modelo pequeño con datos reales que te importen.</div></div>
+<div class="step"><div class="st"><b>Fase 4, hazlo eficiente y publícalo.</b> Caché KV, FlashAttention, cuantización, un bucle de servicio sencillo. Ahora es usable.</div></div>
+</div>
+<div class="wt-body reveal" style="max-width:72ch"><p><strong>Dos complementos gratuitos:</strong> un manual de entrenamiento de 214 páginas que recorre todo el proceso (preentrenamiento, entrenamiento intermedio, posentrenamiento, tokenización, datos, infraestructura y los problemas reales que pueden surgir), y un único proyecto de código abierto de ~8000 líneas (nanochat) que cubre el proceso de principio a fin: entrenar el tokenizador, preentrenar, entrenar con conversaciones, ajustar con supervisión, opcionalmente aprender por refuerzo y luego servirlo con una caché KV y conversar con él. Lee el manual y construye el proyecto.</p></div>
+</section>
+<section id="s16">
+<div class="sec-head reveal"><div class="sec-num">16</div><div><h2>Glosario en lenguaje sencillo</h2><div class="sub">Cada término técnico explicado en una línea</div></div></div>
+<dl class="gloss reveal">
+<div class="gterm"><dt>Token</dt><dd>Un fragmento de texto, más o menos una palabra o parte de una. Los modelos leen y escriben en tokens, y pagas por token.</dd></div>
+<div class="gterm"><dt>Inferencia</dt><dd>El modelo que realmente se ejecuta para convertir tu solicitud en una respuesta. El inference de "serving" significa hacerlo para muchas solicitudes a la vez.</dd></div>
+<div class="gterm"><dt>Prefill y generación</dt><dd>Dos fases de una solicitud. Prefill es cuando el modelo lee tu prompt; decode es cuando escribe la respuesta palabra por palabra.</dd></div>
+<div class="gterm"><dt>Ventana de contexto</dt><dd>Cuánto texto puede ver el modelo a la vez. Como un escritorio, deja de funcionar bien cuando le amontonas demasiadas cosas.</dd></div>
+<div class="gterm"><dt>Caché KV</dt><dd>La memoria a corto plazo del modelo sobre la conversación actual. Crece con el contexto y consume rápidamente la memoria de la tarjeta gráfica.</dd></div>
+<div class="gterm"><dt>Caché de prefijos</dt><dd>Reutilizar el trabajo ya realizado sobre texto que el modelo había visto antes, para que el contexto repetido sea casi gratis. Aquí es donde se esconde la mayor parte del costo en la nube.</dd></div>
+<div class="gterm"><dt>Cuantización</dt><dd>Guardar los valores del modelo con menos precisión para reducir su tamaño, como guardar una foto en un JPEG más pequeño. Es un poco menos exacto, pero cabe.</dd></div>
+<div class="gterm"><dt>GGUF, AWQ, FP8, NVFP4</dt><dd>Formatos de archivo para esos modelos reducidos. Solo necesitas uno para el que tu motor esté optimizado; no son intercambiables.</dd></div>
+<div class="gterm"><dt>Mezcla de expertos (MoE)</dt><dd>Un modelo enorme que solo activa una parte pequeña y relevante de sí mismo para cada palabra, así que funciona rápido a pesar de su tamaño.</dd></div>
+<div class="gterm"><dt>Parámetros activos frente a totales</dt><dd>El modelo es enorme en teoría (total), pero solo se activa una pequeña parte por palabra (activa). La parte activa es la que determina la velocidad y la memoria.</dd></div>
+<div class="gterm"><dt>Decodificación especulativa</dt><dd>Adivina varias palabras de forma económica y luego compruébalas todas en una pasada. Si las adivinanzas son correctas, obtienes un gran aumento de velocidad gratis.</dd></div>
+<div class="gterm"><dt>RAG</dt><dd>El enfoque anterior: buscar fragmentos relevantes y pegarlos en el prompt. Funciona bien con documentos, pero es torpe para bases de código completas.</dd></div>
+<div class="gterm"><dt>RLM (modelo de lenguaje recursivo)</dt><dd>En vez de leerlo todo, el modelo escribe un pequeño programa para buscar lo que necesita y obtiene solo la respuesta. Así no se satura la ventana.</dd></div>
+<div class="gterm"><dt>vLLM y llama.cpp</dt><dd>Los dos programas principales para ejecutar y servir un modelo. vLLM es potente para muchos usuarios; llama.cpp funciona en casi cualquier lugar.</dd></div>
+<div class="gterm"><dt>Rendimiento y latencia</dt><dd>El rendimiento es la cantidad de palabras por segundo para todos. La latencia es cuánto tarda en aparecer la primera palabra. Optimizas para una cosa o la otra.</dd></div>
+<div class="gterm"><dt>Interconexión</dt><dd>La conexión entre tarjetas gráficas (NVLink, PCIe, la red). Cuando es lenta, se convierte en el verdadero cuello de botella, no los chips.</dd></div>
+<div class="gterm"><dt>Sandbox</dt><dd>Una sala sellada y desechable donde un agente puede actuar sin tocar tu equipo real. Un comando incorrecto se revierte en lugar de causar daños.</dd></div>
+<div class="gterm"><dt>Local primero / híbrido</dt><dd>Ejecuta casi todo en tu propio hardware y envía a la nube solo el problema difícil ocasional. La mayor parte del ahorro, con una válvula de seguridad.</dd></div>
+<div class="gterm"><dt>QAT (entrenamiento consciente de la cuantización)</dt><dd>Un modelo entrenado para reducirse, en vez de reducirlo después del entrenamiento. Conserva más calidad en tamaños pequeños, así que las versiones QAT (como las de Gemma) funcionan muy bien con poca memoria. Prefiere una versión QAT cuando encuentres una.</dd></div>
+<div class="gterm"><dt>Arnés vs. modelo vs. servicio</dt><dd>Tres cosas distintas que la gente suele confundir. El harness es la aplicación que llama al modelo (Claude Code, Cowork). El servicio es el motor que lo ejecuta (vLLM, MLX). El modelo son solo los pesos. La mayoría de los problemas de «no funciona» en realidad están en el harness.</dd></div>
+<div class="gterm"><dt>Evaluación</dt><dd>Un pequeño conjunto de tareas reales tuyas, con las respuestas que aceptarías, que usas para poner a prueba cada modelo y elegir al ganador. La única puntuación que refleja tu trabajo, a diferencia de una clasificación pública.</dd></div>
+<div class="gterm"><dt>Descarga de trabajo (ejecutar un modelo más grande que tu VRAM)</dt><dd>Mantén la mayor parte del modelo en la RAM normal del sistema y solo la parte activa en la GPU. Esto permite que un equipo pequeño use modelos mucho más grandes. La desventaja: la RAM del sistema es más lenta y se convierte en el cuello de botella. Funciona especialmente bien con mezclas de expertos (descarga los expertos inactivos). Herramientas: descarga parcial de llama.cpp, KTransformers.</dd></div>
+<div class="gterm"><dt>Malla privada (Tailscale)</dt><dd>Una red privada y cifrada entre todos tus dispositivos y tu teléfono, para que cualquiera de ellos pueda acceder desde cualquier lugar a un modelo que se ejecuta en tu equipo de casa, sin pasar por la internet pública. Convierte un montón de computadoras en una nube personal de IA que te pertenece.</dd></div>
+<div class="gterm"><dt>Agentes ambientales</dt><dd>Agentes que siguen funcionando 24/7 porque en local no hay cargos por llamada ni límites de frecuencia: análisis de seguridad continuos, vigilancia de anomalías y búsqueda de oportunidades. Un caso de uso cuyo costo la nube no puede igualar.</dd></div>
+</dl>
+</section>
+<section id="s17">
+<div class="sec-head reveal"><div class="sec-num">17</div><div><h2>Preguntas frecuentes</h2><div class="sub">Lo que la gente realmente pregunta</div></div></div>
+<dl class="gloss reveal">
+<div class="gterm"><dt>¿Necesito una GPU cara?</dt><dd>No. Empieza con la computadora que ya tienes. Un modelo funciona en una laptop normal, solo que más lento. Compra hardware solo cuando lo que tienes ya no te alcance.</dd></div>
+<div class="gterm"><dt>¿Un modelo local es tan bueno como ChatGPT o Claude?</dt><dd>Para la mayoría de las tareas cotidianas de programación y escritura, los buenos modelos abiertos son lo bastante capaces. Para los problemas más difíciles, las grandes nubes siguen liderando, por eso «principalmente local, con la nube para el problema difícil ocasional» es el punto ideal.</dd></div>
+<div class="gterm"><dt>¿Es difícil de configurar?</dt><dd>El primer modelo funciona en pocos minutos con un programa gratuito. Las partes avanzadas (serving, escalado, sandboxing) son opcionales y las agregas solo cuando realmente las necesitas.</dd></div>
+<div class="gterm"><dt>¿Es gratuito?</dt><dd>El software y los modelos son gratis. Pagas la electricidad y tu propio tiempo, además del hardware si escalas. No hay cobro por uso ni facturas sorpresa.</dd></div>
+<div class="gterm"><dt>¿Es privado y seguro?</dt><dd>Sí, ese es precisamente el objetivo: nada sale de tu máquina. Si dejas que un agente ejecute comandos, ponlo primero en un entorno aislado, una sala sellada donde puedas deshacer cualquier error.</dd></div>
+<div class="gterm"><dt>¿Mi configuración quedará obsoleta?</dt><dd>Los nombres de los modelos cambian constantemente, pero el método no. Cambiar por un modelo más nuevo suele requerir cambiar una sola línea, así que te mantienes al día sin reconstruir nada.</dd></div>
+<div class="gterm"><dt>¿Cuándo debería ir más allá del notebook?</dt><dd>Cuando más de una persona o herramienta necesita el modelo, o te parece demasiado lento. Entonces agrega un equipo dedicado y, más adelante, un clúster. Crece paso a paso.</dd></div>
+<div class="gterm"><dt>¿Y si todavía necesito un modelo de frontera de vez en cuando?</dt><dd>Guarda una clave en la nube como respaldo y envíale solo los problemas difíciles que surjan en raras ocasiones. Tienes costos locales y privacidad por defecto, con toda la potencia disponible cuando la necesitas.</dd></div>
+</dl>
+</section>
+</main>
+</div>
+</div><!-- /tab-guide -->
+<!-- ============ TAB: CALCULATOR ============ -->
+<div aria-labelledby="tab-calc-btn" class="panel" id="tab-calc" role="tabpanel" tabindex="0">
+<div class="calcwrap">
+<div class="kicker reveal">Interactivo</div>
+<h1 class="title reveal" style="font-size:clamp(40px,6vw,72px)">Puedo hacerlo <em>¿ejecutar?</em></h1>
+<p class="dek reveal">Elige tu hardware y un modelo. La calculadora indica si cabe en la memoria, cuál será la velocidad aproximada y cuánto espacio quedará. La capacidad determina qué cabe; el ancho de banda determina la velocidad.</p>
+<div class="calc reveal">
+<div class="calc-card">
+<h3>Tu configuración</h3>
+<div class="field"><label for="hwPreset">Hardware <span class="hint">(elige uno o Personalizado)</span></label>
+<select id="hwPreset"></select></div>
+<div class="field row">
+<div style="flex:1"><label for="mem">Memoria (GB)</label><input id="mem" min="1" step="1" type="number" value="64"/></div>
+<div style="flex:1"><label for="bw">Ancho de banda (GB/s)</label><input id="bw" min="1" step="1" type="number" value="307"/></div>
+</div>
+<h3 style="margin-top:22px">El modelo</h3>
+<div class="field"><label for="modelPreset">Elección rápida <span class="hint">(o establece los valores de abajo)</span></label>
+<select id="modelPreset"></select></div>
+<div class="field row">
+<div style="flex:1"><label for="params">Tamaño (miles de millones de parámetros)</label><input id="params" min="0.1" step="0.1" type="number" value="30"/></div>
+<div style="flex:1"><label for="quant">Cuantización</label>
+<select id="quant">
+<option value="16">16 bits (completo)</option>
+<option value="8">8 bits</option>
+<option selected="" value="4">4 bits</option>
+<option value="3">3 bits</option>
+<option value="2">2 bits</option>
+</select></div>
+</div>
+<div class="field check"><input id="moe" type="checkbox"/><label for="moe">Mezcla de expertos (solo se activa una parte por token)</label></div>
+<div class="field" hidden="" id="activeWrap"><label for="active">Parámetros activos (miles de millones)</label><input id="active" min="0.1" step="0.1" type="number" value="3"/></div>
+<div class="field"><label for="ctx">Contexto (tokens) <span class="hint" id="ctxLabel">32k</span></label>
+<input id="ctx" max="1000000" min="4000" step="4000" style="width:100%;accent-color:var(--coral)" type="range" value="32000"/></div>
+</div>
+<div class="calc-card calc-out">
+<div class="verdict" id="verdict">Define los valores</div>
+<div class="grid">
+<div class="stat"><div class="big" id="oWeights">0 GB</div><div class="lab">pesos del modelo</div></div>
+<div class="stat"><div class="big" id="oKV">0 GB</div><div class="lab">caché KV en este contexto (estimación)</div></div>
+<div class="stat"><div class="big" id="oNeed">0 GB</div><div class="lab">memoria total necesaria</div></div>
+<div class="stat"><div class="big" id="oSpeed">0</div><div class="lab">palabras estimadas por segundo</div></div>
+</div>
+<div class="barwrap">
+<div class="blab"><span>memoria utilizada</span><span id="barTxt">0 / 64 GB</span></div>
+<div class="bar"><div class="used" id="barUsed"></div></div>
+</div>
+<p class="calc-note" id="calcNote"></p>
+</div>
+</div>
+<p class="calc-note reveal" style="max-width:760px">Estas son estimaciones deliberadamente simples para establecer expectativas, no un benchmark. Los pesos son exactos; la caché KV y la velocidad son aproximadas (las cifras reales dependen del modelo específico, el diseño de atención, la cuantización KV, la longitud del prompt y de si usas MLX, llama.cpp, vLLM o SGLang). La velocidad de decodificación supone que el límite es el ancho de banda de memoria, lo que ocurre en casi todos los usos locales de un solo flujo.</p>
+</div>
+</div><!-- /tab-calc -->
+<!-- ============ TAB: TLDR WALKTHROUGH ============ -->
+<div aria-labelledby="tab-walkthrough-btn" class="panel" id="tab-walkthrough" role="tabpanel" tabindex="0">
+<div class="shell">
+<nav class="toc" id="toc-w">
+<div class="brand">// el proceso completo, de principio a fin</div>
+<a href="#w0"><span class="num">00</span> La decisión inicial</a>
+<a href="#w1"><span class="num">01</span> Cómo elegir el hardware</a>
+<a href="#w2"><span class="num">02</span> Primera ejecución, un comando</a>
+<a href="#w3"><span class="num">03</span> Cómo elegir modelos en 2026</a>
+<a href="#w4"><span class="num">04</span> Uso avanzado de vLLM</a>
+<a href="#w5"><span class="num">05</span> La técnica de la compresión</a>
+<a href="#w6"><span class="num">06</span> El desafío del contexto</a>
+<a href="#w7"><span class="num">07</span> Conectar tus agentes</a>
+<a href="#w8"><span class="num">08</span> Adoptando múltiples agentes</a>
+<a href="#w9"><span class="num">09</span> Protección del sistema</a>
+<a href="#w10"><span class="num">10</span> Aumentando la velocidad</a>
+<a href="#w11"><span class="num">11</span> Auto-mejora</a>
+<a href="#w12"><span class="num">12</span> Escalar más allá de una máquina</a>
+<a href="#w13"><span class="num">13</span> Hacia dónde va todo esto</a>
+</nav>
+<main>
+<header class="wt-hero">
+<div class="kicker reveal">La construcción completa, en orden</div>
+<h1 class="title reveal" style="font-size:clamp(40px,6vw,72px)">El Paso a Paso</h1>
+<p class="lead reveal">Cómo pasar realmente de una suscripción en la nube a una operación de IA soberana con hardware propio. Lee de principio a fin. Da más peso a los aprendizajes recientes, porque este campo se reinventa cada pocas semanas.</p>
+</header>
+<section class="chapter" id="w0">
+<div class="ch-head reveal"><span class="ch-num">00</span><h2>La reflexión: por qué empezar</h2></div>
+<div class="reveal"><span class="ch-tag">Enfoque reciente, 2026</span></div>
+<div class="wt-body reveal">
+<p class="drop">Antes de cualquier hardware, la decisión es económica y política. A lo largo de 2026, la situación se aclaró. La era barata de programar en la nube consistía en usar capital de riesgo para ganar cuota de mercado, y el reajuste de precios ya llegó: facturación basada en el uso, multiplicadores por modelo y límites semanales que te dejan «programar 30 minutos y luego esperar 4.5 horas». Un agente con consumo medido gastó aproximadamente $14 en menos de cinco minutos, lo que equivale a más de $130,000 al año. Dicho sin rodeos: tu plan de $19 se convirtió en un problema de $1,550; 40 veces más, no un 40 por ciento.</p>
+<p>La segunda revelación es más discreta y más condenatoria. Los resultados de la nube no son estables. Un experimento controlado encontró que la calidad oscilaba en "una ola sinusoidal de genialidad y disparates" según la carga y la hora del día, algo consistente con cuantización silenciosa, GPU suspendidas y prompts de sistema sustituidos a escondidas. En local obtienes un modelo "determinísticamente tonto", pero nunca cambia por debajo de ti.</p>
+<p>Luego llegaron los acontecimientos que convirtieron una preferencia en una tesis. Interrupciones de varias horas. Cambios en la retención de datos durante cinco años. Modelos de frontera completos suspendidos de la noche a la mañana por directivas de exportación. Cada uno dejó claro lo mismo. <strong>Si tu flujo de trabajo depende de la API de un proveedor, una decisión que no tomaste y contra la que no puedes reclamar puede dejarte en una situación crítica.</strong></p>
+<p>Una salvedad honesta que vale la pena repetir: esto no afirma que la IA local supere a Claude en inteligencia bruta. Se trata de resiliencia y privacidad. El objetivo final es un enfoque híbrido. Ejecuta casi todo localmente y envía afuera solo los problemas difíciles, poco frecuentes y que se puedan comprimir. Esta estrategia también es la única solución real para la IA en la sombra, porque para evitar que la gente pegue secretos en un chat hay que ofrecerle algo local más rápido y mejor.</p>
+</div>
+</section>
+<section class="chapter" id="w1">
+<div class="ch-head reveal"><span class="ch-num">01</span><h2>Cómo elegir el hardware</h2></div>
+<div class="reveal"><span class="ch-tag">Reciente: era GB10</span></div>
+<div class="wt-body reveal">
+<p class="drop">No necesitas un centro de datos. La máquina más usada en 2026 es la NVIDIA GB10, un equipo Grace-Blackwell con 128GB de memoria unificada que cabe en un cajón de calcetines y consume entre 33 y 74 vatios, pero aun así ejecuta DeepSeek V4 con un millón de tokens de contexto. La lección que sigue demostrando es que <strong>la memoria unificada más una interconexión moderna supera a presumir de VRAM en bruto para el trabajo con agentes.</strong></p>
+<p>Si quieres rendimiento, en el otro extremo del conjunto de equipos está una HP Z8 Fury con cuatro tarjetas RTX A6000, alrededor de 192GB de VRAM. Algo fundamental: esas A6000 tienen cinco años. «No es el auto, es quien conduce». Una buena ingeniería en una Ampere antigua supera en rendimiento a las API SaaS, y vale la pena esforzarse de verdad por adaptar modelos nuevos a silicio antiguo que ya no tiene soporte, en vez de comprar la tarjeta más reciente.</p>
+<p>La opción con mejor relación calidad-precio es AMD. El Ryzen AI MAX+ PRO 395 (Strix Halo) viene con 128GB de memoria unificada. Un truco reciente y muy práctico: está clasificado para 96GB de memoria GPU, pero un modo de BIOS «servidor de IA de borde» y ajustes de GTT y TTM en Linux permiten aprovechar los 128GB completos, suficientes para alojar Qwen3-Coder-30B en BF16 con un contexto de un millón de tokens y una huella de 115GB. Vigila las temperaturas: el chip es tan nuevo que el daemon térmico no reconoció su CPUID y provocó un apagado hasta que pases <span class="mono-cell">thermald --ignore-cpuid-check</span>.</p>
+<p>Dos ideas que conviene asimilar desde el principio. Primero, la red puede ser la capacidad de cálculo: una sola A6000 puede compartirse por la LAN con una laptop ligera mediante un túnel de CUDA sobre QUIC. Segundo, el umbral es increíblemente bajo. Un agente de programación funciona en una ThinkPad i5 de 2018 a tres tokens por segundo con batería. Puedes empezar con lo que tienes hoy en tu escritorio.</p>
+</div>
+</section>
+<section class="chapter" id="w2">
+<div class="ch-head reveal"><span class="ch-num">02</span><h2>Primer encendido: un modelo, un comando</h2></div>
+<div class="reveal"><span class="ch-tag">La ruta de entrada de 10 minutos</span></div>
+<div class="wt-body reveal">
+<p class="drop">La forma más rápida de poner en marcha un modelo local es llama.cpp. Instálalo, descarga un GGUF (una buena primera opción es Qwen3-Coder-30B o GLM-4.7-Flash) y empieza <span class="mono-cell">llama-server</span>. Ahora tienes un endpoint compatible con OpenAI en localhost.</p>
+<p>El paso que hace que todo encaje es el plug-and-play. Casi todos los agentes de programación leen una variable de entorno de base URL, así que apuntas la herramienta en la nube a tu propio servidor y simplemente funciona.</p>
+<div class="code reveal">
+<span class="k">exportar</span> ANTHROPIC_BASE_URL=<span class="v">http://localhost:8080</span> <span class="c"># llama.cpp</span><br/>
+<span class="c"># inicia Claude Code. Ahora se comunica con tu modelo, sin cuenta.</span>
+</div>
+<p>Cuando una herramienta solo habla un dialecto, le pones una capa de compatibilidad. Hay <span class="mono-cell">fake-ollama</span>, un pequeño proxy de Rust que responde a la API de Ollama, para que VS Code Copilot, Cline y Roo crean que se comunican con Ollama, aunque el tráfico llega en realidad a tu motor real. Claude Code Router hace la misma traducción para conectar Claude Code con backends de estilo OpenAI. El patrón se generaliza: el agente es solo un cliente y tú controlas el servidor al que se conecta.</p>
+<p>Las configuraciones serias evitan deliberadamente Ollama y prefieren llama.cpp y vLLM, porque lo importante es controlar el batching, el caching y la cuantización, no usar una interfaz amigable que los oculte.</p>
+</div>
+</section>
+<section class="chapter" id="w3">
+<div class="ch-head reveal"><span class="ch-num">03</span><h2>Cómo elegir tus modelos en 2026</h2></div>
+<div class="reveal"><span class="ch-tag">Reciente: la avalancha de pesos abiertos</span></div>
+<div class="wt-body reveal">
+<p class="drop">El mayor cambio del año es que los pesos abiertos, en su mayoría de laboratorios chinos, alcanzaron la frontera. La idea central: terminó la era de los modelos de frontera exclusivos de la nube; ahora la frontera está en tu escritorio. Las familias que vale la pena ejecutar son Qwen (la estrella, de 0.6B a 480B, con Qwen3-Coder-Next como modelo de uso diario), GLM de Z.ai (la línea «Opus en casa», con GLM-4.7-Flash como opción rápida, buena y económica), DeepSeek (el especialista de backend, «el alma de un desarrollador sénior de una empresa Fortune 500»), Kimi K2 (nativo para enjambres, con un billón de parámetros), MiniMax M2 (el programador «Anthropic en una botella») y Gemma junto con Nemotron para modelos más pequeños y arquitecturas híbridas.</p>
+<p>Las reglas de selección son coherentes y van a contracorriente. <strong>La eficiencia es la nueva escalabilidad; más grande no significa mejor.</strong> Un modelo denso de 27B o una mezcla de expertos con 3B activos en la frontera de Pareto supera a un gigante de un billón de parámetros para casi todo el trabajo, y las pruebas lo respaldan: se ha informado que enjambres de agentes de programación locales superan a modelos de vanguardia en algunas bases de código heredadas. <strong>Los benchmarks públicos rara vez predicen si algo se adapta a tus necesidades;</strong> la eficiencia de tokens, el costo y la facilidad de uso en tus propias tareas son mejores criterios de selección. Y <strong>elige el modelo según la tarea:</strong> DeepSeek para Java y C# empresariales, modelos pequeños para tareas de agentes repetitivas y específicas, no un modelo para todo.</p>
+<p>El hilo conductor de la arquitectura es la dispersión. La mezcla de expertos, con una enorme cantidad total de parámetros pero pocos parámetros activos por token, es justamente lo que permite que el comportamiento de frontera quepa en la memoria de consumo. Al leer una especificación, el número importante es el de parámetros activos, no el total.</p>
+</div>
+</section>
+<section class="chapter" id="w4">
+<div class="ch-head reveal"><span class="ch-num">04</span><h2>Uso avanzado de vLLM</h2></div>
+<div class="reveal"><span class="ch-tag">Cuando un usuario se convierte en muchos</span></div>
+<div class="wt-body reveal">
+<p class="drop">llama.cpp te permite empezar a ejecutar. vLLM te da velocidad y concurrencia. Es el motor de servicio para producción, que expone a la vez rutas compatibles con OpenAI, Anthropic y Ollama, con batching continuo, prefill por fragmentos y caché de prefijos. Para modelos nuevos, lo compilas desde el código fuente con una versión nightly de PyTorch para obtener compatibilidad desde el primer día; además, hay parches para ejecutar modelos de frontera en GPU antiguas no compatibles.</p>
+<p>Lo más importante que revela vLLM es dónde está realmente el costo. Durante una sesión local de programación de seis horas, se midió una tasa de aciertos de la caché de prefijos del 96 por ciento: de 46 millones de tokens de prompt, solo alrededor de 1.3 millones requirieron cómputo real de prefill. Todo lo demás se sirvió desde la caché. <strong>La implicación es que el costo de la programación con agentes está dominado por la caché de prefijos (trabajo reutilizado sobre texto que el modelo ya vio), no por la generación,</strong> por eso los planes planos en la nube tienen límites de uso y por eso lo «ilimitado» es teatro de precios, no física.</p>
+<p>Valores predeterminados prácticos que se repiten en configuraciones reales: activa el almacenamiento en caché de prefijos, establece un presupuesto generoso de tokens por lotes, ajusta max sequences a tu concurrencia y elige un backend de atención compatible con la cuantización de tu caché KV. Luego observa el endpoint de métricas: las cifras de tasa de aciertos y utilización de KV te indican si el cuello de botella está en la caché, la memoria o el cómputo mucho antes de que tengas que adivinar.</p>
+</div>
+</section>
+<section class="chapter" id="w5">
+<div class="ch-head reveal"><span class="ch-num">05</span><h2>La técnica de la compresión</h2></div>
+<div class="reveal"><span class="ch-tag">Reciente: la caché KV</span></div>
+<div class="wt-body reveal">
+<p class="drop">Aquí es donde la ingeniería local se vuelve difícil y se consiguen la mayoría de las mejoras. Dos capas se comprimen: los pesos y la caché KV. Para los pesos, los formatos son GGUF, AWQ, FP8, NVFP4 y, en el extremo, BitNet ternario de 1.58 bits, que ahorra aproximadamente 10x de memoria y ofrece una precisión cercana a FP16 tras un calentamiento de destilación. APEX es una opción favorita reciente: precisión mixta que tiene en cuenta la mezcla de expertos en llama.cpp estándar; supera a Q8 e incluso a F16 en perplejidad con la mitad de tamaño, al asignar bits por experto y por capa.</p>
+<p>Pero la obsesión reciente, y la palanca de mayor impacto, es la caché KV. <strong>La batalla es por el ancho de banda de memoria, no por los FLOPs.</strong> TurboQuant de Google, implementado dentro de la ruta Triton de vLLM, comprime la caché a dos y medio o tres y medio bits por token mediante el manejo de valores atípicos, una transformación de Hadamard, libros de códigos de agrupamiento y una proyección de signo de un bit. Eso permite que un equipo mantenga 4.7 millones de tokens de caché KV en la memoria de la GPU y alcance 3,426 tokens por segundo en esas A6000 antiguas.</p>
+<div class="code reveal">
+vllm serve /models/target <span class="k">\</span><br/>
+  --attention-backend <span class="v">TRITON_ATTN</span> <span class="k">\</span><br/>
+  --kv-cache-dtype <span class="v">turboquant35</span> --enable-turboquant
+        </div>
+<p>Para los modelos realmente grandes, enviar la caché comprimida al disco permite ejecutar un DeepSeek V4 de 284B con un contexto de un millón de tokens en una sola caja del tamaño de la palma de la mano. Adopta este modelo mental: los tokens de contexto ahora son recursos de cómputo y almacenamiento que administras, no un búfer gratuito que llenas.</p>
+</div>
+</section>
+<section class="chapter" id="w6">
+<div class="ch-head reveal"><span class="ch-num">06</span><h2>El desafío del contexto</h2></div>
+<div class="reveal"><span class="ch-tag">Reciente: la gran idea</span></div>
+<div class="wt-body reveal">
+<p class="drop">Todo lo anterior es infraestructura. Esta es la habilidad que distingue un juguete de un sistema. La idea central, repetida durante todo el año y la más compartida: deja de saturar la ventana de contexto y dale al modelo un entorno. El rendimiento en tareas densas cae en picada después de unos dieciséis mil tokens, así que una ventana de un millón de tokens no es la respuesta: es la trampa.</p>
+<p>El arma principal es el modelo de lenguaje recursivo (Recursive Language Model). Carga una base de código de 32 millones de tokens en una variable de REPL de Python. El modelo raíz nunca ve la avalancha. Escribe código para buscar con grep, extraer fragmentos y recorrer el repo, y genera subagentes que devuelven símbolos y variables resumidos, no muros de texto. El resultado es que no hay degradación del contexto y se pasa del 15 al 40 por ciento en tareas de largo horizonte. La idea: RAG preguntaba qué hay en el documento; RLM pregunta qué puedes hacer que haga el documento.</p>
+<p>Importan dos complementos. MemAgent trata el contexto enorme como un problema de gestión de memoria, no de atención: el aprendizaje por refuerzo por fragmentos sobre una memoria de cantidad fija de tokens permite recuperar 3.5 millones de tokens con menos de cinco por ciento de pérdida y escala linealmente, incluso con un modelo base que tiene una ventana de 8K. Y el «momento JPEG»: representar texto como imágenes para un modelo de visión. DeepSeek-OCR decodifica con 97 por ciento de precisión y una compresión de diez veces, y Glyph convierte diez mil palabras en unos tres mil tokens visuales.</p>
+<p>En particular, para las bases de código, el nuevo enfoque es que el código es un grafo, no un corpus de documentos. Una herramienta como <span class="mono-cell">dede</span> expone un grafo real de dependencias como una skill para que el agente consulte el alcance del impacto («qué se rompe si cambio este endpoint») en lugar de dividir a ciegas cuarenta repos en fragmentos RAG. La navegación supera a la recuperación.</p>
+</div>
+</section>
+<section class="chapter" id="w7">
+<div class="ch-head reveal"><span class="ch-num">07</span><h2>Conectar tus agentes de programación</h2></div>
+<div class="reveal"><span class="ch-tag">La recompensa diaria</span></div>
+<div class="wt-body reveal">
+<p class="drop">Con un endpoint local rápido y una ingeniería de contexto real, el flujo de trabajo diario es simple: toma el agente que ya te gusta y cambia su destino. Es normal ejecutar dieciséis sistemas de desarrollo con IA distintos en una estación de trabajo con una GPU. Claude Code headless sin cuenta es el entorno principal; opencode, cuando quieres más concurrencia (32 en paralelo frente a los tres de Claude Code en la misma GPU), además de Droid, Kimi-CLI, Cursor, Cline, Kilo, Roo y Mistral Vibe, todos apuntando a localhost.</p>
+<p>Aquí vale la pena comparar el costo en tokens. El servidor MCP de GitHub cuesta aproximadamente 54,000 tokens solo para cargar su especificación, antes de cualquier llamada. La ayuda equivalente de CLI ocupa 562 tokens y ya forma parte de los datos de entrenamiento del modelo. Las skills cuestan entre 30 y 50 tokens hasta que las activas. <strong>Para los agentes, las herramientas de línea de comandos y las skills que se revelan progresivamente suelen ser más económicas, rápidas y fáciles de depurar que los servidores MCP.</strong></p>
+<p>Otro tema reciente es "todo en todas partes": cuando el endpoint es tuyo, el cliente es portátil. Cualquier dispositivo que pueda abrir una conexión puede convertirse en cliente, incluso laptops completamente desconectadas. La idea es que ser dueño del servidor libera la interfaz.</p>
+</div>
+</section>
+<section class="chapter" id="w8">
+<div class="ch-head reveal"><span class="ch-num">08</span><h2>Adoptando múltiples agentes</h2></div>
+<div class="reveal"><span class="ch-tag">Reciente: supervisar, no programar</span></div>
+<div class="wt-body reveal">
+<p class="drop">Pasar de un agente a un enjambre cambia tu trabajo: de escribir código a coordinar procesos. Con diez mil agentes y una proporción de IA a humanos de 35 a 1, la lección recurrente es que, más allá de cierto punto, ya no hay ninguna interfaz humana: el backlog se convierte en la interfaz.</p>
+<p>El patrón es iniciar, ejecutar, informar y terminar. Los enjambres autoorquestados que deciden cuándo terminar reducen una revisión profunda de una base de código de tres horas y media y diecinueve millones de tokens a unos diez minutos, con resultados idénticos en un noventa por ciento. Para el aislamiento, el paso es pasar de los worktrees de git a AgentFS, donde todo el entorno de ejecución del agente —archivos, estado y llamadas a herramientas— vive en un solo archivo SQLite. Eso significa <span class="mono-cell">cp agent.db snapshot.db</span> es viajar en el tiempo y puedes ejecutar consultas SQL sobre lo que realmente hicieron tus agentes.</p>
+<p>En la cima está el ciclo de orquestación, y el enfoque reciente en producción es deliberadamente sencillo y prioriza el funcionamiento sin conexión: agentes sin interfaz gráfica controlados por temporizadores de systemd y bloqueos de archivos, con una cola descentralizada de incidencias (Radicle) que actúa como máquina de estados. Un ticket marcado como aprobado y en cola se bloquea, se trabaja, se modifica y se marca como terminado; al final, una persona integra los cambios. La cola es el HUD, la coordinación es el cuello de botella; la generación, no.</p>
+</div>
+</section>
+<section class="chapter" id="w9">
+<div class="ch-head reveal"><span class="ch-num">09</span><h2>Protección del sistema</h2></div>
+<div class="reveal"><span class="ch-tag">Reciente: el modelo escribe, el arnés restringe</span></div>
+<div class="wt-body reveal">
+<p class="drop">Un agente que puede escribir en el disco es, dicho sin rodeos, un desarrollador júnior con claves de API y ambición. La división del trabajo es estricta: el modelo probabilístico solo sugiere; el código determinista decide y hace cumplir las reglas. En cuanto tu agente puede actuar, lo ejecutas en un entorno aislado y le pones controles.</p>
+<p>Para el aislamiento, recurre a Hyperlight, una micro-VM de Rust que crea aislamiento de hardware en aproximadamente un milisegundo, con llamadas al invitado en microsegundos y restauración de instantáneas, de modo que un comando destructivo alucinado se revierte en microsegundos. Firecracker con AgentFS es la opción más pesada, con verificación formal. Para instalaciones y acciones de shell, Aegis es una barrera de confianza cero donde cada plan de ejecución se firma con Ed25519 y se registra en un libro mayor encadenado por hashes y a prueba de manipulaciones, y la IA es arquitectónicamente incapaz de escalar privilegios: nunca obtiene acceso root, nunca genera el vector de argumentos y se aplica mediante una API de procesos sin shell. Por defecto, sudo, curl-pipe-bash y las instalaciones de paquetes no planificadas están prohibidos.</p>
+<p>La conversación reciente sobre la cadena de suministro, reforzada tras un incidente real de envenenamiento, extiende estas medidas a las dependencias: fija cada artefacto con un hash, desactiva los scripts del ciclo de vida de los paquetes, genera una lista de materiales de software, firma las imágenes y aplica controles con escáneres. Una prueba práctica: si tu stack puede resistir una dependencia comprometida <span class="mono-cell">pip install</span>. Algunas configuraciones van más allá y descentralizan el propio plano de control, con herramientas como Radicle e IPFS en una malla privada.</p>
+</div>
+</section>
+<section class="chapter" id="w10">
+<div class="ch-head reveal"><span class="ch-num">10</span><h2>Aumentando la velocidad</h2></div>
+<div class="reveal"><span class="ch-tag">Reciente: HBM, no FLOPs</span></div>
+<div class="wt-body reveal">
+<p class="drop">Cuando funciona y es seguro, lo ajustas. El hallazgo recurrente es que la velocidad de servicio local depende del ancho de banda de memoria y del enrutamiento de expertos, no de la potencia de cálculo bruta. Para obtener 370 tokens por segundo de cuatro A6000, fija el hilo del router a un nodo NUMA (el banco de memoria físicamente más cercano a ese procesador), reorganiza la caché KV para que los expertos activos queden en los bancos de memoria más rápidos, fija la profundidad de cola alrededor de 64 para ocultar la latencia y reduce el escalado rope por cliente (las matemáticas que permiten que un modelo procese textos más largos). Nada de eso es «comprar una GPU más grande».</p>
+<p>En cuanto a algoritmos, añade decodificación especulativa (adivinar varias palabras a bajo costo y luego verificarlas todas en un solo paso): DFlash redacta un bloque entero con un solo paso de difusión para lograr una aceleración de aproximadamente seis veces, y DDTree verifica un árbol de borradores con atención de árbol sin perder información. Un truco reciente de cincuenta líneas que vale la pena conocer es DeepConf: poda las secuencias de razonamiento según la confianza del propio modelo en los tokens y detiene antes las cadenas débiles. Alcanza una precisión casi perfecta en AIME con hasta un 85 por ciento menos de tokens y sin entrenamiento.</p>
+<p>Las cifras resultantes son la prueba de toda la disciplina: 3,426 tokens por segundo con un contexto de un millón de tokens en tarjetas antiguas; 620 tokens por segundo con seis mil sesiones concurrentes en un solo equipo; un modelo DeepSeek de un millón de tokens a 80 a 91 tokens por segundo en una máquina del tamaño de la palma de la mano; y un modelo de 2.3B que funciona en una pestaña del navegador a 80 tokens por segundo, completamente sin conexión.</p>
+</div>
+</section>
+<section class="chapter" id="w11">
+<div class="ch-head reveal"><span class="ch-num">11</span><h2>Enseñarle a mejorar por sí mismo</h2></div>
+<div class="reveal"><span class="ch-tag">Reciente: entrenar en el mismo escritorio</span></div>
+<div class="wt-body reveal">
+<p class="drop">La última capa es que puedes entrenar y mejorar modelos en el mismo hardware desde el que los sirves, y los métodos recientes lo hacen barato. La autodestilación destaca: un modelo ajustado con sus propias respuestas no verificadas, sin aprendizaje por refuerzo, verificador ni modelo docente, hizo que un modelo de 30B pasara del 42 al 55 por ciento de tasa de aprobación en un benchmark de programación; una ganancia relativa del treinta por ciento por casi nada.</p>
+<p>Para prompts y skills, usa DSPy con GEPA, un optimizador genético de Pareto que converge en unas cincuenta iteraciones frente a miles de pruebas de fuerza bruta y recopila automáticamente tus sesiones de alto éxito como señal de entrenamiento. La sorpresa recurrente de las investigaciones recientes es que los modelos recursivos diminutos tienen un rendimiento extraordinario: una red recursiva de siete millones de parámetros supera a modelos miles de veces más grandes en razonamiento abstracto, y la autoagregación recursiva mejora en treinta puntos un modelo 4B en matemáticas difíciles, sin verificador.</p>
+<p>Incluso puedes entrenar desde cero en tu escritorio (nanochat en cuatro A6000) y ejecutar ciclos de refuerzo donde un modelo escribe Rust y el compilador es la función de recompensa, alcanzando una tasa de compilación del 72 por ciento dentro de un entorno aislado sin privilegios de root. La idea no es que debas preentrenar en casa un modelo de frontera. Es que ahora el posentrenamiento, la destilación y la combinación de modelos están bajo tu control, lo que completa el ciclo de soberanía.</p>
+</div>
+</section>
+<section class="chapter" id="w12">
+<div class="ch-head reveal"><span class="ch-num">12</span><h2>Escalar más allá de una máquina</h2></div>
+<div class="reveal"><span class="ch-tag">Hiperescala en casa</span></div>
+<div class="wt-body reveal">
+<p class="drop">Cuando una sola máquina realmente se convierte en el cuello de botella, recurres a Kubernetes y AIBrix, el plano de control preferido, que agrega escalado automático consciente de LLM basado en la utilización de la caché, enrutamiento distribuido de la caché KV y gestión de adaptadores de alta densidad sobre vLLM. Un clúster doméstico de proveedores mixtos ejecuta nodos NVIDIA y AMD uno al lado del otro, programados en conjunto.</p>
+<p>Para un equipo pequeño hay una receta completa de alta disponibilidad: dos nodos con MicroK8s, etcd replicado, una IP virtual flotante administrada por Pacemaker, almacenamiento en espejo y deploys canary, con conmutación por error en menos de un minuto y un modelo de programación que sirve alrededor de noventa tokens por segundo. Y la capa de gobernanza se trata como código: la definición de terminado se convierte en puertas de compilación, donde un umbral de cobertura bloquea los merges y un agente de seguridad rechaza las pull requests vulnerables. La recomendación recurrente: trata el enjambre como una organización de ingeniería con políticas, determinismo y auditoría, no como un asistente.</p>
+</div>
+</section>
+<section class="chapter" id="w13">
+<div class="ch-head reveal"><span class="ch-num">13</span><h2>Hacia dónde va todo esto</h2></div>
+<div class="reveal"><span class="ch-tag">Reciente: la frontera de la frontera</span></div>
+<div class="wt-body reveal">
+<p class="drop">Las ideas más recientes apuntan más allá de la capa de aplicaciones. La provocación es concebir la IA como infraestructura del sistema operativo en vez de como una app: una pequeña red neuronal que se ejecuta en el espacio del kernel, intercepta eventos mediante eBPF y responde en menos de cien microsegundos; solo recurre a un modelo de CPU y luego a un clúster de GPU cuando hace falta, de modo que la mayor parte del trabajo nunca sale del ring cero y las llamadas a GPU se reducen en tres cuartas partes.</p>
+<p>Alrededor de eso están los otros temas que vale la pena explorar: la red como cómputo, con inferencia canalizada entre equipos y mallas de modelos descentralizadas entre pares; agentes que se mejoran a sí mismos, donde la mejora recursiva es «un archivo YAML» y las tareas cron se adentran en el espacio latente; y un impulso constante por descentralizar el código, los pesos y el cómputo para que ninguna plataforma sea un cuello de botella.</p>
+<p>Las prácticas recurrentes en todo esto: ejecuta los pesos localmente, invierte en el sistema que rodea al modelo, comprime de forma agresiva, dale al modelo un entorno en vez de una ventana de contexto cada vez mayor, aísla cualquier cosa que pueda actuar y diseña de modo que los servicios en la nube sigan siendo opcionales.</p>
+</div>
+</section>
+</main>
+</div>
+</div><!-- /tab-walkthrough -->
+<!-- ============ TAB: ENGINES ============ -->
+<div aria-labelledby="tab-engines-btn" class="panel" id="tab-engines" role="tabpanel" tabindex="0">
+<div class="shell">
+<nav class="toc" id="toc-e">
+<div class="brand">// sigue el motor</div>
+<a href="#e0"><span class="num">00</span> El principio central</a>
+<a href="#e1"><span class="num">01</span> La guía para decidir</a>
+<a href="#e2"><span class="num">02</span> Qué hace un motor</a>
+<a href="#e3"><span class="num">03</span> Los verdaderos cuellos de botella</a>
+<a href="#e4"><span class="num">04</span> Las cuatro familias</a>
+<a href="#e5"><span class="num">05</span> Motor por motor</a>
+<a href="#e6"><span class="num">06</span> Configuraciones de hardware</a>
+<a href="#e7"><span class="num">07</span> Pruebas de rendimiento</a>
+<a href="#e8"><span class="num">08</span> Errores comunes</a>
+<a href="#e9"><span class="num">09</span> El mapa final</a>
+<a href="#e10"><span class="num">10</span> Notas de campo: kernels</a>
+</nav>
+<main>
+<header class="wt-hero">
+<div class="kicker reveal">La capa de software que transforma el hardware en inferencia</div>
+<h1 class="title reveal" style="font-size:clamp(40px,6vw,72px)">Los <em>Motores</em></h1>
+<p class="lead reveal">Una guía de campo de 2026 sobre motores de inferencia de LLM. La regla por encima de todas las demás: no eliges primero el motor; eliges una estrategia de hardware, una forma de carga de trabajo y un modelo de servicio. El motor viene después.</p>
+<p class="bridge reveal">La sección tres de la Guía nombró los motores principales: vLLM, llama.cpp y SGLang. Esta es la capa de decisión que está debajo: todos los principales motores de inferencia en 2026, el hardware y las cargas de trabajo para las que sirve cada uno, y cómo elegir sin adivinar.</p>
+</header>
+<section class="chapter" id="e0">
+<div class="ch-head reveal"><span class="ch-num">00</span><h2>El principio central</h2></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>El modelo es lo que sabe cosas. El motor es todo lo que lo hace utilizable: organiza las solicitudes, administra la memoria y devuelve las palabras. La idea de esta pestaña es que elijas el motor al final, después de conocer tu hardware y cómo lo vas a usar.</p></div>
+<div class="wt-body reveal">
+<p class="drop">Un motor de inferencia no es el modelo. Es el controlador del tráfico, el administrador de memoria, el despachador del kernel, el planificador, el encargado de la caché, el planificador del paralelismo, la interfaz de API y, a veces, el marco de despliegue. El mejor motor se adapta a tu jerarquía de memoria, interconexión, formato de cuantización, objetivos de latencia y rendimiento, arquitectura del modelo y madurez operativa. Elige la estrategia y el motor se hará evidente.</p>
+</div>
+<div class="wt-body reveal">
+<p>La carga de trabajo tiene dos fases, y esa división explica casi todo. <strong>Prefill</strong> lee el prompt y crea la caché inicial; requiere mucho cómputo. <strong>Decodificación</strong> genera un token a la vez, leyendo repetidamente los pesos y la caché; está limitado por el ancho de banda de memoria. La velocidad de decodificación depende más del ancho de banda de memoria que del rendimiento máximo de cómputo.</p>
+</div>
+<ul class="clean reveal">
+<li><b>Prompt breve, respuesta larga:</b> la decodificación es lo que más pesa, así que el ancho de banda de memoria y el procesamiento por lotes son importantes.</li>
+<li><b>Prompt largo, respuesta corta:</b> predomina el prefill, por lo que importan los kernels de atención y el prefill por fragmentos.</li>
+<li><b>Muchos usuarios:</b> la calidad del planificador importa, así que también importan el batching continuo, la paginación de la caché y la equidad.</li>
+<li><b>Contexto largo:</b> la caché KV es el factor dominante, así que importan la atención paginada, la cuantización KV y la descarga.</li>
+<li><b>MoE:</b> el enrutamiento de expertos es lo que más pesa, así que el paralelismo entre expertos y la interconexión son importantes.</li>
+<li><b>Multinodo:</b> el interconector es el factor dominante, por lo que importan NVLink, RDMA, el paralelismo de canalización y la desagregación.</li>
+</ul>
+</section>
+<section class="chapter" id="e1">
+<div class="ch-head reveal"><span class="ch-num">01</span><h2>La guía de decisión de una página</h2></div>
+<div class="reveal"><span class="ch-tag">Empieza aquí</span></div>
+<div class="tbl-wrap reveal">
+<table>
+<thead><tr><th>Tu situación</th><th>Usa</th><th>Familia</th></tr></thead>
+<tbody>
+<tr><td>Laptop, edge o hardware poco común</td><td><b>llama.cpp</b></td><td class="mono-cell">portátil</td></tr>
+<tr><td>Flujos centrados en Mac</td><td><b>MLX / MLX-LM</b></td><td class="mono-cell">Apple</td></tr>
+<tr><td>Inferencia local en una sola RTX</td><td><b>ExLlamaV2</b></td><td class="mono-cell">CUDA doméstico</td></tr>
+<tr><td>De 2 a 4 o más GPUs NVIDIA/CUDA</td><td><b>ExLlamaV3</b></td><td class="mono-cell">CUDA doméstico</td></tr>
+<tr><td>Inferencia general en producción</td><td><b>vLLM</b></td><td class="mono-cell">producción</td></tr>
+<tr><td>Contexto largo / MoE / enrutamiento</td><td><b>SGLang</b></td><td class="mono-cell">producción</td></tr>
+<tr><td>Máximo rendimiento en NVIDIA</td><td><b>TensorRT-LLM</b></td><td class="mono-cell">producción</td></tr>
+<tr><td>Orquestación de clúster</td><td><b>NVIDIA Dynamo</b></td><td class="mono-cell">orquestación</td></tr>
+</tbody>
+</table>
+</div>
+<div class="wt-body reveal"><p>Todo lo que sigue explica por qué. En resumen: el motor depende de tu hardware, tu tráfico y tu tolerancia a la complejidad operativa.</p></div>
+</section>
+<section class="chapter" id="e2">
+<div class="ch-head reveal"><span class="ch-num">02</span><h2>Lo que realmente hace un motor</h2></div>
+<div class="wt-body reveal">
+<p class="drop">Como mínimo, un motor carga los pesos, tokeniza la entrada, ejecuta el paso hacia adelante, muestrea tokens, mantiene la caché KV y transmite los resultados. Los motores avanzados añaden procesamiento por lotes, planificación, almacenamiento en caché de prefijos, cuantización, ejecución paralela, servicio de API, métricas y ejecución distribuida. El tema recurrente en todos los avances es el mismo: el rendimiento de inferencia depende del movimiento de memoria y la planificación.</p>
+<p>Las técnicas emblemáticas atacan todas ese tema. <strong>PagedAttention</strong> abordó la fragmentación de la caché KV al dividirla en bloques, lo que aumentó la utilización y permitió lotes más grandes. <strong>FlashAttention</strong> usó mosaicos conscientes de la E/S para reducir el tráfico hacia la memoria de alto ancho de banda. <strong>Decodificación especulativa</strong> genera tokens preliminares baratos y los verifica en paralelo. Nada de esto acelera el cálculo de la GPU. Mueve menos datos de memoria y los programa mejor.</p>
+</div>
+</section>
+<section class="chapter" id="e3">
+<div class="ch-head reveal"><span class="ch-num">03</span><h2>Los verdaderos cuellos de botella</h2></div>
+<div class="grid g2 reveal" style="margin-bottom:6px">
+<div class="stat"><div class="big">819 GB/s</div><div class="lab">Ancho de banda de la memoria unificada del Apple M3 Ultra. Te permite cargar modelos que no cabrían en la VRAM de un equipo de consumo.</div></div>
+<div class="stat"><div class="big">3.35 TB/s</div><div class="lab">Ancho de banda de memoria de NVIDIA H100 SXM. Los atiende más rápido una vez que el modelo cabe. Que quepa no significa que sea rápido.</div></div>
+</div>
+<ul class="clean reveal">
+<li><b>Ancho de banda de memoria, no solo capacidad de VRAM.</b> La VRAM determina qué cabe. El ancho de banda determina la velocidad de decodificación. Capacidad no es lo mismo que ancho de banda.</li>
+<li><b>Crecimiento de la caché KV.</b> Crece con el tamaño del lote y la longitud del contexto, así que las cargas de trabajo con contextos largos se quedan sin memoria incluso cuando los pesos caben. PagedAttention es la solución.</li>
+<li><b>Interconexión.</b> Cuando un modelo cruza los límites entre GPU, pagas un costo de comunicación: el paralelismo de tensores necesita all-reduce frecuente; el paralelismo de expertos necesita all-to-all. Sin NVLink, el paralelismo de pipeline puede superar al paralelismo de tensores.</li>
+<li><b>Calidad del planificador.</b> Admitir batching no es lo mismo que contar con un scheduler listo para producción que decida qué solicitudes agrupar, cómo comparten el acelerador prefill y decode, y cómo evitar que algunas solicitudes queden sin atención.</li>
+<li><b>Sobrecarga del entorno de ejecución.</b> CUDA graphs, fusión de kernels, muestreo, tokenizer, HTTP, cambio de LoRA y decodificación estructurada. A escala, esas molestas sobrecargas del dos por ciento se acumulan y exigen atención.</li>
+</ul>
+</section>
+<section class="chapter" id="e4">
+<div class="ch-head reveal"><span class="ch-num">04</span><h2>Las cuatro familias</h2></div>
+<div class="grid g2 reveal">
+<div class="card"><h3><span class="fam-chip fam-portable">portátil</span> Entornos de ejecución locales</h3><p>llama.cpp, MLC LLM, ONNX Runtime GenAI, OpenVINO. Les importa una sola cosa: que funcione aquí, en el hardware que tengas.</p></div>
+<div class="card"><h3><span class="fam-chip fam-apple">Apple</span> Memoria unificada</h3><p>MLX y MLX-LM. Diseñados para aprovechar la gran memoria compartida de Apple y su pila, primero en Mac.</p></div>
+<div class="card"><h3><span class="fam-chip fam-cuda">CUDA doméstico</span> Motores de cuantización</h3><p>ExLlamaV2 y ExLlamaV3. Haz que un equipo con 3090 / 4090 / 5090 rinda al máximo con pesos de pocos bits.</p></div>
+<div class="card"><h3><span class="fam-chip fam-prod">producción</span> Motores de servicio</h3><p>vLLM, SGLang, TensorRT-LLM, TGI, LMDeploy. Usuarios concurrentes, caché KV, batching, paralelismo, observabilidad, costo por token.</p></div>
+</div>
+<div class="wt-body reveal"><p>Por encima de todo esto está un <strong>capa de orquestación</strong> como NVIDIA Dynamo, que coordina flotas, prefill y decode desagregados, enrutamiento y escalado automático entre varios motores.</p></div>
+</section>
+<section class="chapter" id="e5">
+<div class="ch-head reveal"><span class="ch-num">05</span><h2>Motor por motor</h2></div>
+<div class="grid g2 reveal">
+<div class="eng"><div class="eh"><span class="fam-chip fam-portable">portátil</span><h3>llama.cpp</h3></div><p>El rey de la portabilidad. Apple Silicon mediante Metal, x86 mediante AVX y AMX, además de RISC-V, CUDA, AMD HIP, Vulkan, SYCL y offload híbrido de CPU y GPU. Su servidor HTTP es mucho más que un juguete: rutas compatibles con OpenAI y Anthropic, reranking, batching continuo, multimodalidad, restricciones de JSON Schema, llamadas a funciones y decodificación especulativa.</p><div class="verdict"><b>Veredicto</b>Úsalo cuando importen más la portabilidad, el funcionamiento sin conexión, GGUF o la descarga híbrida que el servicio a escala de flota. No lo uses para producción con varias GPU o varios nodos; su backend RPC está documentado como frágil e inseguro.</div></div>
+<div class="eng"><div class="eh"><span class="fam-chip fam-apple">Apple</span><h3>MLX / MLX-LM</h3></div><p>El framework de arreglos de Apple y su paquete para LLM. El dato clave es la memoria unificada: la CPU y la GPU comparten un mismo conjunto, así que la pregunta pasa de «¿cabe en la VRAM?» a «¿cabe en la memoria y esta puede alimentar a la GPU lo bastante rápido?». Los modelos cuantizados grandes caben donde una tarjeta de 24GB no podría. También es más lento que HBM.</p><div class="verdict"><b>Veredicto</b>Úsalo para trabajar con ML y LLM, sobre todo en Mac. Para ofrecer servicio público con alta concurrencia, empieza con una pila de servicio real; el propio servidor de MLX-LM advierte que no es para producción.</div></div>
+<div class="eng"><div class="eh"><span class="fam-chip fam-cuda">CUDA doméstico</span><h3>ExLlamaV2</h3></div><p>El motor CUDA local para entusiastas. Atención paginada, batching dinámico, caché de prompts, deduplicación de la caché KV, streaming y decodificación especulativa. La palabra que debes recordar es local: hace que los modelos cuantizados EXL2 sean rápidos en tarjetas de consumo.</p><div class="verdict"><b>Veredicto</b>La opción ideal para un equipo con una sola 3090 / 4090 / 5090 que ejecuta un asistente de programación o chat local.</div></div>
+<div class="eng"><div class="eh"><span class="fam-chip fam-cuda">CUDA doméstico</span><h3>ExLlamaV3</h3></div><p>Extiende la filosofía a multi-GPU y MoE local. Añade el formato EXL3 basado en QTIP, paralelismo flexible de tensores y expertos para hardware de consumo, un servidor compatible con OpenAI mediante TabbyAPI y soporte multimodal.</p><div class="verdict"><b>Veredicto</b>La frontera para 2 a 4+ GPU NVIDIA de consumo o MoE local. Espera más asperezas a cambio de mayor capacidad; algunos modelos no admiten su paralelismo.</div></div>
+<div class="eng"><div class="eh"><span class="fam-chip fam-prod">producción</span><h3>vLLM</h3></div><p>El servidor de producción de código abierto predeterminado y el primer motor que la mayoría de los equipos debería evaluar. PagedAttention, batching continuo, prefill por bloques, caché de prefijos, amplia cuantización (FP8, MXFP4, NVFP4, INT8/4, GPTQ, AWQ, GGUF), decodificación especulativa y prefill/decode desagregados. Paralelismo de tensores, pipeline, datos, expertos y contexto; API de OpenAI y Anthropic, multi-LoRA, en NVIDIA, AMD y más.</p><div class="verdict"><b>Veredicto</b>Si alguien dice «necesitamos servir modelos abiertos en producción», este es el punto de partida predeterminado. No elimina la necesidad de pensar en sistemas: aún debes ajustar el procesamiento por lotes, la disposición del paralelismo y el enrutamiento.</div></div>
+<div class="eng"><div class="eh"><span class="fam-chip fam-prod">producción</span><h3>SGLang</h3></div><p>el primo de vLLM con mentalidad de sistemas, para cuando la carga de trabajo es complicada: salidas estructuradas, contexto largo, MoE y enrutamiento. Usa caché de prefijos con RadixAttention y ofrece como diferencial la desagregación entre prefill y decode: separa el prefill, que exige mucho cómputo, del decode, que exige mucha memoria, en instancias especializadas para que los prefills largos no disparen la latencia del decode.</p><div class="verdict"><b>Veredicto</b>Para los equipos cuyo cuello de botella ya no es «¿podemos ejecutarlo?», sino «¿podemos ejecutarlo con tráfico hostil sin disparar la latencia, la memoria y el costo?»</div></div>
+<div class="eng"><div class="eh"><span class="fam-chip fam-prod">producción</span><h3>TensorRT-LLM</h3></div><p>La pila de máximo rendimiento de NVIDIA. Crea motores TensorRT optimizados con kernels personalizados de atención, GEMM y MoE, separación de prefill y decode, paralelismo amplio de expertos y decodificación especulativa. B200 carga FP4 con kernels optimizados; H100 y posteriores ejecutan FP8, que puede duplicar el rendimiento y reducir a la mitad la memoria frente a 16-bit.</p><div class="verdict"><b>Veredicto</b>Si estás comprometido con NVIDIA y te importa el máximo rendimiento, debe formar parte de la comparación. Cambias portabilidad por rendimiento: resulta complicado con AMD, Apple o modelos experimentales que cambian rápidamente.</div></div>
+<div class="eng"><div class="eh"><span class="fam-chip fam-orch">orquestación</span><h3>NVIDIA Dynamo</h3></div><p>Una capa de orquestación distribuida sobre motores como vLLM, SGLang y TensorRT-LLM. Desagregación, enrutamiento inteligente que tiene en cuenta KV, caché KV multinivel y escalado automático.</p><div class="verdict"><b>Veredicto</b>Recurre a él cuando servir con un solo motor ya no sea suficiente y estés coordinando una flota.</div></div>
+</div>
+<div class="wt-body reveal"><p style="margin-top:24px"><strong>El resto del campo.</strong> TGI es el servidor de producción de Hugging Face; es una buena opción cuando importan la integración con HF y la simplicidad. MLC LLM es un motor universal centrado en la compilación para distribuir en navegadores, móviles y aplicaciones nativas. ONNX Runtime GenAI impulsa Foundry Local y Windows ML en CPU, CUDA, DirectML, WebGPU y más; es la mejor opción para implementar aplicaciones. OpenVINO GenAI es la opción de Intel para Xeon, Arc y NPU. LMDeploy es un kit de herramientas CUDA con TurboMind, una alternativa a vLLM y SGLang.</p></div>
+<div class="warn reveal"><b>Una exclusión tajante.</b> No uses Ollama para nada serio. Es agradable, pero para trabajar de verdad recurre a llama.cpp (control y portabilidad) o a una pila de servicio adecuada (concurrencia, seguridad, observabilidad). Las capas de conveniencia ocultan justo los controles de batching, caché y cuantización que necesitas.</div>
+</section>
+<section class="chapter" id="e6">
+<div class="ch-head reveal"><span class="ch-num">06</span><h2>Recetas de estrategia de hardware</h2></div>
+<div class="tbl-wrap reveal">
+<table>
+<thead><tr><th>Hardware</th><th>Receta</th></tr></thead>
+<tbody>
+<tr><td>Servidor solo con CPU</td><td>Primero, llama.cpp. OpenVINO para Intel Xeon. ONNX Runtime GenAI para aplicaciones o despliegues de ONNX.</td></tr>
+<tr><td>MacBook / Mac Studio</td><td>MLX / MLX-LM para trabajar de forma nativa en Mac. llama.cpp para portabilidad con GGUF.</td></tr>
+<tr><td>Una sola RTX 3090 / 4090 / 5090</td><td>ExLlamaV2 para EXL2. llama.cpp para GGUF. vLLM si atiendes a varios usuarios.</td></tr>
+<tr><td>Doble o cuádruple RTX de consumo</td><td>ExLlamaV3 para cuantización multi-GPU o MoE. vLLM si importa el comportamiento de serving. SGLang para enrutamiento / contexto largo.</td></tr>
+<tr><td>nodo 8x H100 / H200</td><td>Empieza con vLLM o SGLang. Evalúa TensorRT-LLM si solo usarás NVIDIA y el rendimiento lo justifica. Usa Dynamo con varios nodos.</td></tr>
+<tr><td>clase B200 / GB200 / GB300</td><td>Compara el rendimiento de TensorRT-LLM, SGLang y vLLM. Añade Dynamo para el enrutamiento de la flota y el escalado automático.</td></tr>
+<tr><td>AMD MI300 / MI325 / MI355</td><td>vLLM o SGLang en ROCm. No des por sentado que los benchmarks de NVIDIA se trasladan sin cambios.</td></tr>
+<tr><td>Intel Xeon / Core Ultra / Arc</td><td>OpenVINO GenAI u OpenVINO Model Server. ONNX Runtime GenAI para integrar en aplicaciones.</td></tr>
+<tr><td>Navegador, móvil, nativo de la app</td><td>MLC LLM / WebLLM o ONNX Runtime GenAI.</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="chapter" id="e7">
+<div class="ch-head reveal"><span class="ch-num">07</span><h2>Evaluación del rendimiento: qué medir</h2></div>
+<div class="warn reveal" style="background:#202b22;border-color:#36452f"><b>Mal benchmark:</b> "Obtuve 180 tokens por segundo." Eso casi no dice nada sin conocer el modelo, los pesos, la forma de la carga de trabajo y la concurrencia detrás de esa cifra.</div>
+<div class="grid g3 reveal">
+<div class="card"><h3>Modelo</h3><p>Modelo exacto, arquitectura, cantidad de parámetros, parámetros activos de MoE.</p></div>
+<div class="card"><h3>Pesos</h3><p>Dtype, formato de cuantización, tamaño de grupo, calibración.</p></div>
+<div class="card"><h3>Motor</h3><p>Versión, commit, backend, flags.</p></div>
+<div class="card"><h3>Hardware</h3><p>SKU de GPU, capacidad y ancho de banda de la memoria, interconexión, CPU, RAM.</p></div>
+<div class="card"><h3>Carga de trabajo</h3><p>Distribuciones de longitud de entrada y salida, concurrencia, streaming, prefijos compartidos y salida estructurada.</p></div>
+<div class="card"><h3>Métricas</h3><p>TTFT, TPOT, latencia de extremo a extremo, p50/p95/p99, tokens y solicitudes por segundo, tasa de aciertos de KV-cache, rendimiento de prefill frente a decode, costo por millón de tokens.</p></div>
+</div>
+<ul class="clean reveal">
+<li>Nunca compares motores usando solo los tokens por segundo de un único usuario.</li>
+<li>Prueba la distribución real de tus prompts y respuestas, con una concurrencia realista.</li>
+<li>Separa prefill de decode. Mide p95 y p99, no solo los promedios.</li>
+<li>Mide el margen de memoria disponible con la longitud de contexto objetivo, y la reutilización de la caché si tienes prefijos repetidos.</li>
+<li>Compara por separado el rendimiento de la salida estructurada, LoRA y multi-LoRA; las gramáticas y los adaptadores añaden sobrecarga.</li>
+<li>Vuelve a probar después de cada actualización de controlador, CUDA, ROCm, modelo o motor.</li>
+</ul>
+</section>
+<section class="chapter" id="e8">
+<div class="ch-head reveal"><span class="ch-num">08</span><h2>Errores comunes</h2></div>
+<ul class="clean reveal">
+<li><b>Elegir basándose únicamente en la capacidad de VRAM.</b> La VRAM determina qué cabe; el ancho de banda y el planificador determinan la velocidad. Una máquina grande con memoria unificada puede alojar modelos enormes, pero una H100 decodifica más rápido cuando el modelo cabe en ella.</li>
+<li><b>Paralelismo de tensores con una interconexión lenta.</b> Sin NVLink ni NVSwitch, prueba el paralelismo de canalización.</li>
+<li><b>Ignorar la caché KV.</b> Con contextos largos y alta concurrencia, se convierte en el factor limitante. La atención paginada, el almacenamiento en caché de prefijos, la cuantización de KV y la desagregación son imprescindibles a escala.</li>
+<li><b>Tratar los motores locales como servidores de producción.</b> La producción implica seguridad, observabilidad, control de contrapresión, enrutamiento, escalado automático y comportamiento conforme al SLA. Los servidores llama.cpp y MLX-LM son capaces y prácticos, pero este último advierte que no es para producción.</li>
+<li><b>Suponiendo que los formatos de cuantización sean portables.</b> GGUF, EXL2, EXL3, AWQ, GPTQ, FP8, FP4, MLX y ONNX no son intercambiables. El formato adecuado es aquel para el que tu motor tiene kernels optimizados.</li>
+<li><b>Ignorar la arquitectura del modelo.</b> Las variantes densas, MoE, con atención híbrida, multimodales y de contexto largo exigen distintas partes de un motor. Una amplia compatibilidad no significa que todas las optimizaciones funcionen igual de bien.</li>
+<li><b>Confiar en gráficos de benchmark sin considerar la forma de la carga de trabajo.</b> Un gráfico para un modelo 8B con 1K de entrada y 128 de salida dice poco sobre un agente de programación con contexto de 80K o un servicio RAG con 500 usuarios concurrentes.</li>
+</ul>
+</section>
+<section class="chapter" id="e9">
+<div class="ch-head reveal"><span class="ch-num">09</span><h2>El mapa final con criterio</h2></div>
+<div class="grid g2 reveal">
+<div class="card"><h3>Usuario de IA local</h3><p>llama.cpp para control. MLX en Mac. ExLlamaV2 o V3 para rendimiento local en CUDA.</p></div>
+<div class="card"><h3>Crear un agente local</h3><p>llama.cpp para portabilidad. MLX en Apple Silicon. vLLM para simular la producción localmente.</p></div>
+<div class="card"><h3>Ofrecer servicio a un equipo interno</h3><p>Empieza con vLLM. Pásate a SGLang para salidas estructuradas, contexto largo, varios LoRA, MoE o enrutamiento.</p></div>
+<div class="card"><h3>Ofrecer servicio a clientes a gran escala</h3><p>Compara el rendimiento de vLLM, SGLang y TensorRT-LLM. Si el enrutamiento y la desagregación son importantes, vale la pena prestar atención a SGLang y Dynamo.</p></div>
+<div class="card"><h3>NVIDIA para centros de datos</h3><p>TensorRT-LLM para máximo rendimiento, vLLM para flexibilidad, SGLang para servicio complejo, Dynamo para la orquestación de flotas.</p></div>
+<div class="card"><h3>Edge, app, navegador, Windows</h3><p>llama.cpp, MLC LLM, ONNX Runtime GenAI u OpenVINO, según la pila.</p></div>
+</div>
+<div class="wt-body reveal"><p style="margin-top:22px"><strong>El principio final.</strong> Los motores de inferencia tienen consecuencias. Elige el motor solo después de poder responder lo siguiente:</p></div>
+<ul class="clean reveal">
+<li>¿Qué hardware tengo realmente y el modelo cabe en la memoria rápida o solo en la memoria del sistema/unificada?</li>
+<li>¿Mi cuello de botella es la decodificación o el prellenado? ¿Qué longitudes de contexto y niveles de concurrencia importan?</li>
+<li>¿Se comparten los prompts lo suficiente como para usar el almacenamiento en caché de prefijos? ¿El modelo es denso, MoE, multimodal o híbrido?</li>
+<li>¿Necesito comodidad local, servicio en producción u orquestación de flotas?</li>
+<li>¿Qué formato de cuantización tiene kernels optimizados en el motor de destino?</li>
+<li>¿Mi interconexión es PCIe, NVLink, NVSwitch, Ethernet, RDMA o Thunderbolt?</li>
+<li>¿Estoy optimizando la latencia, el rendimiento, el costo, la privacidad, la portabilidad o la velocidad de desarrollo?</li>
+</ul>
+</section>
+<section class="chapter" id="e10">
+<div class="ch-head reveal"><span class="ch-num">10</span><h2>Notas de campo: kernels y ancho de banda</h2></div>
+<div class="reveal"><span class="ch-tag">Novedades desde el campo, 2026</span></div>
+<div class="plain reveal"><b>En lenguaje sencillo</b><p>Dos ideas que explican por qué el mismo modelo puede sentirse rápido con una configuración y lento con otra. Primero, el modelo es solo un plano; el trabajo real ocurre en pequeños programas llamados kernels, y los buenos son mucho más rápidos. Segundo, el límite de tu máquina es el producto de tres factores, no un solo número grande.</p></div>
+<div class="wt-body reveal"><p>Un kernel es una rutina pequeña y específica para el hardware que realiza una tarea: una multiplicación de matrices, un paso de atención, una normalización, un paso de muestreo. Un buen motor fusiona estas rutinas para que la GPU no escriba resultados parciales en la memoria una y otra vez. Los kernels malos hacen que la gente diga "este modelo es lento". Los buenos hacen que el mismo modelo vuele. Por eso importa tanto elegir el motor de la guía de decisión.</p></div>
+<div class="wt-body reveal"><p><strong>La fórmula de hardware:</strong> lo que tu equipo puede hacer equivale a <span class="mono-cell">capacidad × ancho de banda × pila de software</span>. La capacidad (memoria) te dice qué cabe. El ancho de banda te dice cuánto puede respirar el equipo. La pila de software (motor más kernels) determina cuánto aprovechas realmente de esas especificaciones. La mayoría compra capacidad, se olvida del ancho de banda e ignora la pila, y luego culpa al modelo.</p></div>
+<div class="grid g2 reveal">
+<div class="stat"><div class="big">14.5 → 64</div><div class="lab">tok/s en 2x RTX 3090 solo con pasar a vLLM y usar paralelismo tensorial entre ambas tarjetas. El mismo hardware, ~4x más rápido.</div></div>
+<div class="stat"><div class="big">32 → 110</div><div class="lab">tok/s en una RTX PRO 6000 al pasar a SGLang. La misma tarjeta, ~3x más rápido; todo gracias a la pila de software.</div></div>
+</div>
+<div class="wt-body reveal"><p><strong>Hardware según el ancho de banda de memoria</strong> (el número que determina la velocidad de decodificación), referencia más reciente:</p></div>
+<div class="tbl-wrap reveal">
+<table>
+<thead><tr><th>Hardware</th><th>Memoria</th><th>Ancho de banda</th></tr></thead>
+<tbody>
+<tr><td>RTX PRO 6000 Blackwell</td><td class="mono-cell">96 GB</td><td><b>1792 GB/s</b></td></tr>
+<tr><td>RTX 5090</td><td class="mono-cell">32 GB</td><td><b>1792 GB/s</b></td></tr>
+<tr><td>RTX 4090</td><td class="mono-cell">24 GB</td><td><b>1008 GB/s</b></td></tr>
+<tr><td>Radeon PRO W7900</td><td class="mono-cell">48 GB</td><td><b>864 GB/s</b></td></tr>
+<tr><td>Mac Studio M3 Ultra</td><td class="mono-cell">hasta 512 GB</td><td><b>819 GB/s</b></td></tr>
+<tr><td>MacBook Pro M5 Max</td><td class="mono-cell">128 GB</td><td><b>460 a 614 GB/s</b></td></tr>
+<tr><td>MacBook Pro M5 Pro</td><td class="mono-cell">64 GB</td><td><b>307 GB/s</b></td></tr>
+</tbody>
+</table>
+</div>
+<div class="wt-body reveal"><p>Fíjate en el patrón: una GPU de escritorio pequeña puede tener mucho más ancho de banda que una laptop grande, por eso una RTX 4090 de 24 GB decodifica más rápido que una Mac de 64 GB cuando el modelo cabe en ambas. La capacidad te permite cargarlo; el ancho de banda te permite ejecutarlo. El equipo inicial al que llegan muchas personas: dos RTX 3090 usadas, un modelo abierto de 27B a 31B, tu agente favorito y una herramienta de búsqueda autoalojada; así puedes programar en casa con calidad de frontera por unos cientos de dólares.</p></div>
+<div class="plain reveal"><b>El punto ideal de 24 GB</b><p>Una regla muy repetida en el sector: no existe un gran modelo que necesite más de 24 GB y menos de ~256 GB. Así que una sola tarjeta de 24 GB (una RTX 3090 usada, por unos $700) ejecuta el mejor modelo que cualquiera puede ejecutar, a menos que tenga diez veces más memoria que tú. Por eso, el equipo económico rinde muy por encima de lo que cuesta.</p></div>
+<div class="wt-body reveal"><p><strong>IA local con presupuesto limitado: qué comprar y ejecutar:</strong></p></div>
+<div class="tbl-wrap reveal">
+<table>
+<thead><tr><th>Presupuesto</th><th>Hardware</th><th>Lo que ejecutas</th></tr></thead>
+<tbody>
+<tr><td><b>$0</b></td><td>una laptop o cualquier GPU de 8 GB que tengas</td><td>un modelo QAT pequeño (de la clase Gemma) para chat y subagentes; con cuantización dinámica y descarga a memoria, incluso una mezcla de expertos de 26B con contexto largo</td></tr>
+<tr><td><b>~$700</b></td><td>una RTX 3090 usada, 24 GB (el punto ideal)</td><td>un modelo de programación de 27B a 32B (de la clase Qwen3, GLM-4.7-Flash) con calidad de nivel de frontera, la mejor relación calidad-precio en IA local</td></tr>
+<tr><td><b>~$2,000</b></td><td>dos 3090 usadas (48 GB) o un AMD Strix Halo (128 GB unificada)</td><td>una mezcla de expertos más grande y un contexto mucho más largo, servidos con vLLM o SGLang</td></tr>
+<tr><td><b>~$5,000+</b></td><td>MacBook Pro M5 Max (128 GB) o un NVIDIA DGX Spark</td><td>los grandes modelos MoE (de la categoría de MiniMax y DeepSeek V4 Flash)</td></tr>
+</tbody>
+</table>
+</div>
+<div class="wt-body reveal"><p>El stack de software sigue determinando cuánto rendimiento obtienes: dos 3090 usadas con vLLM y paralelismo de tensores superan varias veces a las mismas tarjetas con un runner básico. Compra memoria y luego consigue velocidad con el motor adecuado.</p></div>
+<div class="plain reveal"><b>Ejecuta modelos más grandes que tu VRAM</b><p>Si un modelo no cabe, no siempre necesitas una GPU más grande. Con la descarga, la mayor parte del modelo reside en la RAM normal del sistema y solo la parte activa se ejecuta en la GPU. Así, hay quienes ejecutan una mezcla de expertos de 753B en una sola computadora de escritorio (a 4 bits, con una decodificación de alrededor de 13 a 15 palabras/s) y un MoE de 26B en una iGPU de 8 GB a ~20 palabras/s, leyendo directamente el conjunto compartido de RAM. El costo es la velocidad: la RAM del sistema es más lenta y se convierte en el cuello de botella. Funciona muy bien con MoE, porque puedes descargar los expertos inactivos y mantener la parte activa en la GPU. Herramientas: descarga parcial de llama.cpp o KTransformers para MoE grandes.</p></div>
+<div class="plain reveal"><b>O reúne varias máquinas económicas</b><p>La otra forma de superar el límite de un solo equipo es combinar máquinas. Herramientas como exo (de código abierto y gratuita) conectan varias computadoras comunes en un único conjunto de memoria, así que cuatro Mac minis pueden ejecutar un modelo de 235B que ninguna podría cargar por sí sola. Es la opción económica para usar un modelo grande: apila equipos baratos en vez de comprar uno caro. El inconveniente es el mismo que con el offload: el enlace entre máquinas es más lento que la memoria dentro de una sola, por lo que favorece el throughput por encima de una latencia ágil.</p></div>
+</section>
+</main>
+</div>
+</div><!-- /tab-engines -->
+<footer>
+<div class="foot-inner">
+<div class="big-line reveal">Una guía de campo para ejecutar IA de vanguardia en el hardware que tú <span>propio</span>.</div>
+<div class="foot-meta reveal">
+      edición 2026<br/>
+      Vistas: la Guía, el Recorrido y los motores  ·  una síntesis independiente, preparada para el estudio
+    </div>
+</div>
+</footer>
+<script>
+// progress bar
+const prog=document.getElementById('progress');
+const onScroll=()=>{const h=document.documentElement;const max=h.scrollHeight-h.clientHeight;
+  prog.style.width=(max>0?(h.scrollTop/max)*100:0)+'%';};
+document.addEventListener('scroll',onScroll,{passive:true});onScroll();
+
+// reveal on scroll
+const ro=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');ro.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+// TOC active highlight
+const links=[...document.querySelectorAll('nav.toc a')];
+const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+const so=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){
+  links.forEach(l=>l.classList.remove('active'));const a=map[e.target.id];if(a)a.classList.add('active');}});},
+  {rootMargin:'-30% 0px -62% 0px'});
+document.querySelectorAll('section,.band').forEach(s=>{if(s.id)so.observe(s);});
+
+// reveal anything currently in view within a root (guarantees no stuck-hidden content)
+function revealInView(root){root.querySelectorAll('.reveal').forEach(el=>{const r=el.getBoundingClientRect();if(r.top<innerHeight*0.97&&r.bottom>0)el.classList.add('in');});}
+
+// tab switching
+const tabBtns=[...document.querySelectorAll('.tab-btn')];
+const panels={guide:document.getElementById('tab-guide'),calc:document.getElementById('tab-calc'),walkthrough:document.getElementById('tab-walkthrough'),engines:document.getElementById('tab-engines')};
+function activate(name){
+  if(!panels[name])name='guide';
+  tabBtns.forEach(b=>{const on=b.dataset.tab===name;b.classList.toggle('active',on);b.setAttribute('aria-selected',on?'true':'false');});
+  Object.entries(panels).forEach(([k,p])=>p.classList.toggle('active',k===name));
+  window.scrollTo(0,0);
+  history.replaceState(null,'','#'+name);
+  const ap=panels[name];
+  requestAnimationFrame(()=>{revealInView(ap);onScroll();});
+}
+tabBtns.forEach(b=>b.addEventListener('click',()=>activate(b.dataset.tab)));
+// keyboard arrow navigation for the tablist (WAI-ARIA tabs pattern)
+const tablist=document.querySelector('[role="tablist"]');
+if(tablist)tablist.addEventListener('keydown',e=>{
+  const i=tabBtns.findIndex(b=>b.getAttribute('aria-selected')==='true');let n=null;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')n=(i+1)%tabBtns.length;
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp')n=(i-1+tabBtns.length)%tabBtns.length;
+  else if(e.key==='Home')n=0;else if(e.key==='End')n=tabBtns.length-1;
+  if(n!==null){e.preventDefault();tabBtns[n].focus();activate(tabBtns[n].dataset.tab);}
+});
+// skip link focuses the active content region
+const skip=document.querySelector('.skip');
+if(skip)skip.addEventListener('click',e=>{e.preventDefault();const m=document.querySelector('.panel.active main');if(m){m.setAttribute('tabindex','-1');m.focus();m.scrollIntoView();}});
+
+// mobile menu (targets the active panel's TOC)
+const btn=document.getElementById('menuBtn');
+btn.addEventListener('click',()=>{const t=document.querySelector('.panel.active .toc');if(!t)return;const open=t.classList.toggle('open');btn.textContent=open?'CLOSE':'CONTENTS';});
+document.querySelectorAll('.toc').forEach(t=>t.addEventListener('click',e=>{if(e.target.closest('a')){t.classList.remove('open');btn.textContent='CONTENTS';}}));
+
+
+
+// in-text tab links (e.g. "Engines tab"), mouse + keyboard
+document.querySelectorAll('.tablink').forEach(el=>{
+  const go=e=>{e.preventDefault();if(el.dataset.tab)activate(el.dataset.tab);};
+  el.addEventListener('click',go);
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')go(e);});
+});
+
+// copy buttons on every prompt box and code block
+function copyText(t,b){const done=()=>{b.textContent='Copied';b.classList.add('done');setTimeout(()=>{b.textContent='Copy';b.classList.remove('done');},1500);};
+  const fb=()=>{const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand('copy');done();}catch(e){b.textContent='Select + copy';}document.body.removeChild(ta);};
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done).catch(fb);}else fb();}
+function mkCopy(getText){const b=document.createElement('button');b.className='copybtn';b.type='button';b.textContent='Copy';b.addEventListener('click',()=>copyText(getText(),b));return b;}
+document.querySelectorAll('.promptbox').forEach(box=>{const ph=box.querySelector('.ph'),pc=box.querySelector('.pc');if(ph&&pc)ph.appendChild(mkCopy(()=>pc.innerText.trim()));});
+document.querySelectorAll('.code').forEach(code=>{code.appendChild(mkCopy(()=>code.innerText.trim()));});
+
+
+// "Can I run it?" calculator
+(function(){
+  const hw=document.getElementById('hwPreset');if(!hw)return;
+  const mem=document.getElementById('mem'),bw=document.getElementById('bw'),params=document.getElementById('params'),
+    quant=document.getElementById('quant'),moe=document.getElementById('moe'),active=document.getElementById('active'),
+    activeWrap=document.getElementById('activeWrap'),ctx=document.getElementById('ctx'),ctxLabel=document.getElementById('ctxLabel'),
+    mp=document.getElementById('modelPreset');
+  // hardware presets: [label, memGB, bwGBs, unified]
+  const HW=[["MacBook Pro M5 Pro",64,307,1],["MacBook Pro M5 Max",128,614,1],["Mac Studio M3 Ultra",512,819,1],
+    ["MacBook Air M-series",24,120,1],["RTX 3090 (24GB)",24,936,0],["RTX 4090 (24GB)",24,1008,0],["RTX 5090 (32GB)",32,1792,0],
+    ["RTX PRO 6000 (96GB)",96,1792,0],["2x RTX 3090 (48GB)",48,936,0],["AMD Strix Halo (128GB)",128,256,1],["Custom",64,307,1]];
+  // model presets: [label, paramsB, moe(0/1), activeB, defaultQuant]
+  const MD=[["Custom",30,0,0,"4"],["GLM-4.7-Flash (30B/3B MoE)",30,1,3,"4"],["Qwen 27B (dense)",27,0,0,"4"],
+    ["Gemma 8B",8,0,0,"4"],["14B dense",14,0,0,"4"],["70B dense",70,0,0,"4"],["MiniMax-class 230B/10B MoE",230,1,10,"4"],
+    ["GLM full 355B MoE",355,1,32,"4"]];
+  HW.forEach((h,i)=>hw.add(new Option(h[0],i)));
+  MD.forEach((m,i)=>mp.add(new Option(m[0],i)));
+  let unified=1;
+  function applyHW(){const h=HW[hw.value];mem.value=h[1];bw.value=h[2];unified=h[3];calc();}
+  function applyMD(){const m=MD[mp.value];if(mp.value=="0")return;params.value=m[1];moe.checked=!!m[2];active.value=m[3]||3;quant.value=m[4];syncMoe();calc();}
+  function syncMoe(){activeWrap.hidden=!moe.checked;}
+  const fmt=n=>n>=100?Math.round(n):n>=10?n.toFixed(0):n.toFixed(1);
+  function calc(){
+    const M=+mem.value||0, B=+bw.value||0, P=+params.value||0, bits=+quant.value, isMoe=moe.checked, A=isMoe?(+active.value||P):P, C=+ctx.value||0;
+    ctxLabel.textContent=(C>=1000?Math.round(C/1000)+'k':C)+' tokens';
+    const bpp=bits/8;
+    const GB=1073741824;
+    const weights=P*1e9*bpp/GB;
+    const activeGB=A*1e9*bpp/GB;
+    const kv=P*(C/1000)*0.0022;            // rough KV estimate (GB), scales with size + context
+    const reserve=unified?10:1.5;          // OS reserve for unified memory vs dedicated VRAM
+    const need=weights+kv+weights*0.05+reserve;
+    const head=M-need;
+    const theo=activeGB>0?B/activeGB:0;    // tokens/sec theoretical (bandwidth bound)
+    const lo=Math.round(theo*0.55), hi=Math.round(theo*0.8);
+    document.getElementById('oWeights').textContent=fmt(weights)+' GB';
+    document.getElementById('oKV').textContent='~'+fmt(kv)+' GB';
+    document.getElementById('oNeed').textContent=fmt(need)+' GB';
+    document.getElementById('oSpeed').textContent=(theo>0?(lo+' to '+hi):'0');
+    const pct=Math.min(100,Math.max(0,need/M*100));
+    const ub=document.getElementById('barUsed');ub.style.width=pct+'%';ub.classList.toggle('over',need>M);
+    document.getElementById('barTxt').textContent=fmt(need)+' / '+fmt(M)+' GB';
+    const v=document.getElementById('verdict');
+    let cls,txt,sub;
+    if(need>M){cls='no';txt='Does not fit';sub='Short by ~'+fmt(need-M)+' GB. Drop to a smaller model or a heavier quant, shorten the context, offload part of it to system RAM (slower, great for MoE), or route this one to the cloud (Hybrid).';}
+    else if(head<M*0.15){cls='tight';txt='Fits, but tight';sub='About '+fmt(head)+' GB to spare. Fine to try, but long context or other apps may push it over.';}
+    else{cls='good';txt='Fits comfortably';sub='About '+fmt(head)+' GB headroom at this context.';}
+    v.className='verdict '+cls;v.innerHTML=txt+'<span class="vsub">'+sub+'</span>';
+    let note='At 4-bit, weights need about half the model size in GB. ';
+    note+= isMoe?('Speed tracks the '+fmt(A)+'B active params, not the full '+fmt(P)+'B, so a big MoE feels fast.'):('Speed tracks the full '+fmt(P)+'B, since every param fires per word.');
+    if(theo>0&&hi<10)note+=' At single digits per second it is fine for background jobs, slow for live typing.';
+    document.getElementById('calcNote').textContent=note;
+  }
+  hw.addEventListener('change',applyHW);
+  mp.addEventListener('change',applyMD);
+  moe.addEventListener('change',()=>{syncMoe();calc();});
+  [mem,bw,params,quant,active,ctx].forEach(el=>el.addEventListener('input',calc));
+  syncMoe();calc();
+})();
+
+// deep-link + first paint
+const initial=(location.hash||'').replace('#','');
+if(panels[initial])activate(initial);else revealInView(document.querySelector('.panel.active'));
+</script>
+<script crossorigin="anonymous" data-cf-beacon='{"version":"2024.11.0","token":"5070e21320304a1ba2b0a42ce9682840","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" type="module"></script>
+<div id="google_translate_element"></div><script>
+(function(){
+  document.cookie='googtrans=/en/pt;path=/';
+  document.cookie='googtrans=/en/pt;path=/;domain='+location.hostname;
+  window.googleTranslateElementInit=function(){
+    new google.translate.TranslateElement({pageLanguage:'en',includedLanguages:'pt',autoDisplay:false},'google_translate_element');
+    setTimeout(function(){
+      var s=document.querySelector('.goog-te-combo');
+      if(s){s.value='pt';s.dispatchEvent(new Event('change'));}
+    },900);
+  };
+  var js=document.createElement('script');
+  js.src='https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+  js.async=true; document.body.appendChild(js);
+})();
+</script></body>
+</html>
